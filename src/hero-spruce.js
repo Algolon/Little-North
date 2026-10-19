@@ -48,7 +48,7 @@ function loftGeometry(count, sides, vertex){
     const a=j*sides+k,b=j*sides+(k+1)%sides;
     const c=a+sides,d=b+sides;
     // outward normals for +Z oriented taper
-    pushTri(ix,a,c,b);pushTri(ix,b,c,d);
+    pushTri(ix,a,b,c);pushTri(ix,b,d,c);
   }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
