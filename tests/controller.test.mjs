@@ -1,0 +1,74 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createMovementState,advanceMovement,horizontalSpeed,MOTION} from '../src/controller.js';
+const flat=()=>0;
+const tick=(s,input={},n=60,dt=1/60,height=flat,obstacles=[])=>{
+  for(let i=0;i<n;i++)advanceMovement(s,{forward:0,right:0,yaw:0,run:false,jumpPressed:false,...input,jumpPressed:!!input.jumpPressed&&i===0},dt,height,obstacles);
+};
+test('forward is camera-relative and stop does not drift',()=>{
+  const s=createMovementState(0,0,flat);
+  tick(s,{forward:1},60);
+  assert.ok(s.z< -3.1,`z=${s.z}`);
+  assert.ok(Math.abs(s.x)<.01);
+  tick(s,{},40);
+  assert.ok(horizontalSpeed(s)<.01,`speed=${horizontalSpeed(s)}`);
+});
+test('turn camera heading makes WASD forward point east',()=>{
+  const s=createMovementState(0,0,flat);
+  tick(s,{forward:1,yaw:Math.PI/2},60);
+  assert.ok(s.x>3.1,`x=${s.x}`);
+  assert.ok(Math.abs(s.z)<.01);
+  assert.ok(Math.abs(Math.atan2(Math.sin(s.heading-Math.PI/2),Math.cos(s.heading-Math.PI/2)))<.03);
+});
+test('jump is discrete, lands, cannot chain without new press',()=>{
+  const s=createMovementState(0,0,flat);
+  let apex=s.y;
+  for(let i=0;i<135;i++){
+    advanceMovement(s,{forward:0,right:0,yaw:0,jumpPressed:i===0},1/60,flat);
+    apex=Math.max(apex,s.y);
+  }
+  assert.ok(apex>.75,`apex=${apex}`);
+  assert.equal(s.jumpCount,1);
+  assert.equal(s.grounded,true);
+  assert.ok(Math.abs(s.y-.08)<.001);
+  assert.equal(s.vy,0);
+});
+test('jump buffer triggers when landing, only once',()=>{
+  const s=createMovementState(0,0,flat);
+  s.y=1;s.vy=-2;s.grounded=false;s.coyote=0;
+  let double=false;
+  for(let i=0;i<90;i++){
+    advanceMovement(s,{forward:0,right:0,yaw:0,jumpPressed:i===11},1/60,flat);
+    if(s.jumpCount>1)double=true;
+  }
+  assert.equal(double,false);
+  assert.ok(s.jumpCount<=1);
+});
+test('cabin box and spruce circle stop player without walking through',()=>{
+  const s=createMovementState(-4,0,flat);
+  tick(s,{forward:1},110,1/60,flat,[{type:'box',x:-4,z:-6,halfX:2,halfZ:1,rotation:0}]);
+  assert.ok(s.z>=-6+1+.36-.01,`position=${s.z}`);
+  const tree=createMovementState(0,2,flat);
+  tick(tree,{forward:1},120,1/60,flat,[{type:'circle',x:0,z:0,radius:.7}]);
+  assert.ok(tree.z>=1.06-.01,`tree collision z=${tree.z}`);
+});
+test('movement remains close at 30 vs 60 frames per second',()=>{
+  const slow=createMovementState(0,0,flat),fast=createMovementState(0,0,flat);
+  tick(slow,{forward:1},30,1/30);
+  tick(fast,{forward:1},60,1/60);
+  assert.ok(Math.abs(slow.z-fast.z)<.025,`delta=${slow.z-fast.z}`);
+});
+test('slopes follow terrain, bound prevents exiting world',()=>{
+  const terrain=(x,z)=>.11*Math.sin(z*.5)+.12*Math.sin(x*.3);
+  const s=createMovementState(0,0,terrain);
+  tick(s,{forward:1,run:true},250,1/60,terrain);
+  assert.ok(s.z>=MOTION.minBound-.0001);
+  assert.ok(Math.abs(s.y-terrain(s.x,s.z)-.08)<.02);
+});
+test('no-input and zero dt do not create NaN or movement',()=>{
+  const s=createMovementState(1,1,flat);
+  advanceMovement(s,{},0,flat);
+  tick(s,{},60);
+  assert.equal(s.x,1);assert.equal(s.z,1);
+  assert.ok(Object.values(s).every(v=>typeof v!=='number'||Number.isFinite(v)));
+});

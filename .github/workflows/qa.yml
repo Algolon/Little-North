@@ -1,7 +1,7 @@
 name: Little North · A01 Visual QA
 on:
   pull_request:
-    branches: [main]
+    branches: [main, phase-a01-art-calibration]
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +19,7 @@ jobs:
       - name: Validate and build
         run: |
           npm run test:syntax
+          npm run test:movement
           npm run build
       - name: Install headless browser
         run: npx playwright install --with-deps chromium
@@ -31,6 +32,8 @@ jobs:
           exit 1
       - name: Capture and verify desktop, mobile and tree turntable
         run: npm run visual:qa
+      - name: Verify movement on desktop and mobile in Chromium
+        run: npm run qa:controller
       - uses: actions/upload-artifact@v4
         if: always()
         with:
