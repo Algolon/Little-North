@@ -81,8 +81,12 @@ export function advanceMovement(state,input,frameDt,heightAt,obstacles=[]){
     if(stick<.085){f=right=0;}
     const yaw=input.yaw||0;
     const sin=Math.sin(yaw),cos=Math.cos(yaw);
-    const vx=(sin*f+cos*right)*(input.run?MOTION.run:MOTION.walk);
-    const vz=(-cos*f+sin*right)*(input.run?MOTION.run:MOTION.walk);
+    // Camera is placed at (+sin(yaw), +cos(yaw)) relative to the fox.
+    // Forward therefore points AWAY from that camera: (-sin(yaw), -cos(yaw)).
+    // The camera-right basis is (+cos(yaw), -sin(yaw)).
+    // Never flip these signs: it makes touch movement reverse as the view orbits.
+    const vx=(-sin*f+cos*right)*(input.run?MOTION.run:MOTION.walk);
+    const vz=(-cos*f-sin*right)*(input.run?MOTION.run:MOTION.walk);
     const diffX=vx-s.vx,diffZ=vz-s.vz,diffLength=hypot(diffX,diffZ);
     const accel=s.grounded?(stick>.085?MOTION.acceleration:MOTION.braking):MOTION.airAcceleration;
     const amount=Math.min(diffLength,accel*h);
