@@ -72,7 +72,7 @@ function bough(length, halfWidth, drop, snow = false, seed = 0) {
   for (let i = 0; i < stations.length - 1; i++) {
     const a = i * 3, b = (i + 1) * 3;
     indices.push(a, b, a + 1, a + 1, b, b + 1, a + 1, b + 1, a + 2, a + 2, b + 1, b + 2);
-    // Single winding preserves valid smooth face normals; material handles the back side.
+    // Single winding preserves valid smooth face normals; the material handles the back side.
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
@@ -94,7 +94,7 @@ export function createSnowSpruce({ seed = 7, height = 8, snowy = true, hero = fa
   batch.add(new THREE.CylinderGeometry(.035, .18, height * .87, 7, 1), 'bark', M(0, height*.43, 0));
   // Reference study: broad hanging lower boughs, irregular middle silhouette,
   // thin pointed crown with selectively snow-capped shelves.
-  const levels = hero ? 10 : 7;
+  const levels = hero ? 12 : 8;
   for (let layer = 0; layer < levels; layer++) {
     const t = layer / (levels - 1);
     const y = height * (.15 + .72 * t);
@@ -122,9 +122,23 @@ export function createSnowSpruce({ seed = 7, height = 8, snowy = true, hero = fa
       }
     }
   }
-  const crown = new THREE.ConeGeometry(height*.083, height*.24, 6, 1);
-  batch.add(crown, 'needles', M(0, height*.90, 0));
-  if (snowy) batch.add(new THREE.ConeGeometry(height*.072,height*.23,6), 'snow', M(0,height*.915,0));
+  // Sculpt the crown out of continuous small whorls, not a visually detached cone.
+  for (let layer = 0; layer < 4; layer++) {
+    const y = height * (.879 + layer * .028);
+    const len = height * (.09 - layer * .019);
+    for(let j=0;j<5;j++) {
+      const az = j * Math.PI * 2 / 5 + layer * .44;
+      const shape=bough(len,len*.36,len*.24,false,seed+900+layer*5+j);
+      const mat = (j + layer) % 3 === 0 ? 'needlesLight' : 'needles';
+      batch.add(shape,mat,M(0,y,0,az));shape.dispose();
+      if(snowy) {
+        const cap=bough(len*.84,len*.30,len*.23,true,seed+1100+layer*5+j);
+        batch.add(cap,'snow',M(0,y,0,az));cap.dispose();
+      }
+    }
+  }
+  batch.add(new THREE.ConeGeometry(height*.026,height*.11,6), 'needles', M(0,height*.981,0));
+  if(snowy)batch.add(new THREE.ConeGeometry(height*.018,height*.09,6),'snow',M(0,height*.994,0));
   const out = batch.build(mats);
   out.name = hero ? 'hero-reference-sculpt-spruce' : 'forest-spruce';
   out.userData.triangles = Array.from(batch.layers.values()).reduce((s,v)=>s+v.triangles.length/3,0);
