@@ -85,7 +85,7 @@ function twig(a,b,startRadius,endRadius,facets=6){
 function needleSpray(length,width,depth,drop,seed){
   const random=rng(seed);
   const variant=random()*6.283;
-  return loftGeometry(12,9,(u,v)=>{
+  return loftGeometry(7,7,(u,v)=>{
     const a=v*Math.PI*2;
     const u2=Math.pow(u,.88),shape=Math.pow(Math.sin(Math.PI*clamp(u,.001,.999)),.72);
     const w=width*shape*(1+.07*Math.sin(u*13+variant));
@@ -102,7 +102,7 @@ function needleSpray(length,width,depth,drop,seed){
 /** Thick snow *resting on* a branch. A soft asymmetric loft with hanging rounded lips. */
 function snowMantle(length,width,drop,seed){
   const rand=rng(seed),phase=rand()*6.283,tipBias=.86+rand()*.12;
-  return loftGeometry(13,12,(u,v)=>{
+  return loftGeometry(7,9,(u,v)=>{
     const a=v*Math.PI*2;
     const shape=Math.pow(Math.sin(Math.PI*clamp(u,.001,.999)),.57);
     const bulge=(.8+.25*Math.sin(u*8+phase));
@@ -186,11 +186,11 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
           batch.add(spread,tint,frameSide);spread.dispose();
 
           // 3D tuft fingers cut natural little notches into the outline.
-          for(let leaf=0;leaf<2;leaf++){
+          for(let leaf=0;leaf<1;leaf++){
             const leafLen=lateralLen*(.36+random()*.18);
             const twigLeaf=needleSpray(leafLen,leafLen*.19,.045+leafLen*.04,
               leafLen*.12,seed+40000+tier*1031+arm*103+s*13+leaf*3);
-            batch.add(twigLeaf,leaf===0?'pineDeep':tint,
+            batch.add(twigLeaf,(tier+arm+s)%3===0?'pineDeep':tint,
               branchFrame(level,az,side*len*.018,
                 localY-.07,offset+lateralLen*(.28+leaf*.3),
                 rotation+side*(leaf===0?.28:-.22)));
