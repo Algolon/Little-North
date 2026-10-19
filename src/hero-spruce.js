@@ -144,7 +144,7 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
 
   const tiers=10;
   for(let tier=0;tier<tiers;tier++){
-    const t=tier/(tiers-1),y=height*(.18+.69*t);
+    const t=tier/(tiers-1),y=height*(.16+.72*t);
     const branchCount=clamp(Math.round(3.9+random()*1.45-t*.55),3,5);
     const phase=random()*6.283;
     const tierLength=height*(.34*Math.pow(1-t,1.10)+.032);
