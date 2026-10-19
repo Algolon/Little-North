@@ -13,12 +13,42 @@ test('forward is camera-relative and stop does not drift',()=>{
   tick(s,{},40);
   assert.ok(horizontalSpeed(s)<.01,`speed=${horizontalSpeed(s)}`);
 });
-test('turn camera heading makes WASD forward point east',()=>{
+// IMPORTANT: the orbit camera sits (+sin(yaw), +cos(yaw) from the fox.
+ // So screen-up points (-sin(yaw), -cos(yaw), not +sin(yaw)).
+test('camera-relative forward remains screen-up at every quarter orbit',()=>{
+ const cases=[
+  [0,0,-1],
+  [Math.PI/2,-1,0],
+  [Math.PI,0,1],
+  [Math.PI*1.5,1,0],
+ ];
+ for(const [yaw,fx,fz] of cases){
   const s=createMovementState(0,0,flat);
-  tick(s,{forward:1,yaw:Math.PI/2},60);
-  assert.ok(s.x>3.1,`x=${s.x}`);
-  assert.ok(Math.abs(s.z)<.01);
-  assert.ok(Math.abs(Math.atan2(Math.sin(s.heading-Math.PI/2),Math.cos(s.heading-Math.PI/2)))<.03);
+  tick(s,{forward:1,yaw},60);
+  const dot=s.x*fx+s.z*fz;
+  const cross=Math.abs(s.x*fz-s.z*fx);
+  assert.ok(dot>3.1,`yaw=${yaw}: forward movement reversed or too slow, dot=${dot}`);
+  assert.ok(cross<.01,`yaw=${yaw}: off-axis drift =${cross}`);
+ }
+});
+test('camera-relative right always moves toward screen-right at every orbit',()=>{
+ for(const yaw of [0,Math.PI/2,Math.PI,Math.PI*1.5]){
+  const s=createMovementState(0,0,flat);
+  tick(s,{right:1,yaw},60);
+  const rx=Math.cos(yaw),rz=-Math.sin(yaw);
+  const dot=s.x*rx+s.z*rz;
+  const cross=Math.abs(s.x*rz-s.z*rx);
+  assert.ok(dot>3.1,`yaw=${yaw}: joystick right reversed, dot=${dot}`);
+  assert.ok(cross<.01,`yaw=${yaw}: screen-right drift=${cross}`);
+ }
+});
+test('moving forward while rotating view follows the new camera direction',()=>{
+ const s=createMovementState(0,0,flat);
+ tick(s,{forward:1,yaw:0},45);
+ const before={x:s.x,z:s.z};
+ tick(s,{forward:1,yaw:Math.PI/2},60);
+ assert.ok(s.x<before.x-3,`yaw turn should travel toward -X, x=${s.x}`);
+ assert.ok(Math.abs(s.heading+Math.PI/2)<.04,`fox heading=${s.heading}`);
 });
 test('jump is discrete, lands, cannot chain without new press',()=>{
   const s=createMovementState(0,0,flat);
