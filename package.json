@@ -3,13 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Sculpted Arctic Storybook \u2014 Three.js art calibration",
+  "description": "Sculpted Arctic Storybook — Three.js art calibration",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test:syntax": "node --check src/main.js && node --check src/world.js && node --check src/procedural.js && node --check src/fox.js && node --check src/cabin.js && node --check src/sculpt.js",
-    "visual:qa": "node scripts/visual-qa.mjs"
+    "test:syntax": "node --check src/main.js && node --check src/controller.js && node --check src/world.js && node --check src/procedural.js && node --check src/fox.js && node --check src/cabin.js && node --check src/sculpt.js && node --check scripts/controller-qa.mjs",
+    "visual:qa": "node scripts/visual-qa.mjs",
+    "test:movement": "node --test tests/controller.test.mjs",
+    "qa:controller": "node scripts/controller-qa.mjs"
   },
   "dependencies": {
     "three": "0.180.0"
