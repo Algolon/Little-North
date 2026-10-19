@@ -27,7 +27,10 @@ const obstacles=[
   {type:'circle',x:8.6,z:-9.7,radius:.62},
   {type:'circle',x:12.3,z:-15.8,radius:.53},
 ];
-const initial={x:-4,z:4,yaw:.08,pitch:.28,distance:8.6};
+const portraitTouch=window.matchMedia('(pointer:coarse)').matches && window.innerWidth<700;
+ // Portrait needs the fox closer and the camera lower; the old 8.6m/.28 setup
+ // combined with unrestricted swipe pitch became a high overhead view.
+ const initial={x:-4,z:4,yaw:.08,pitch:portraitTouch?.20:.28,distance:portraitTouch?6.1:8.6};
 let state=createMovementState(initial.x,initial.z,heightAt);
 let yaw=initial.yaw,pitch=initial.pitch,cameraDistance=initial.distance,elapsed=0,last=0;
 const cameraLook=new THREE.Vector3(),targetLook=new THREE.Vector3(),desiredCamera=new THREE.Vector3();
@@ -100,8 +103,11 @@ canvas.addEventListener('pointerdown',e=>{
 });
 canvas.addEventListener('pointermove',e=>{
   if(e.pointerId!==orbitPointer)return;
-  yaw-=THREE.MathUtils.clamp(e.clientX-lastX,-80,80)*.0043;
-  pitch=THREE.MathUtils.clamp(pitch+(e.clientY-lastY)*.0038,.10,.78);
+  yaw-=THREE.MathUtils.clamp(e.clientX-lastX,-80,80)*(portraitTouch?.0035:.0043);
+  pitch=THREE.MathUtils.clamp(
+    pitch+(e.clientY-lastY)*(portraitTouch?.0024:.0038),
+    .08,portraitTouch?.55:.70
+  );
   lastX=e.clientX;lastY=e.clientY;
 });
 const finishOrbit=e=>{if(e.pointerId===orbitPointer)orbitPointer=null;};
@@ -166,6 +172,7 @@ window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
 });
 document.getElementById('reset')?.addEventListener('click',resetGame);
+if(portraitTouch)instructions.textContent='Move: left joystick · Look: swipe on the snow · HOP to jump';
 document.getElementById('begin')?.addEventListener('click',()=>{
   intro.hidden=true;started=true;instructions.classList.add('visible');
   setTimeout(()=>instructions.classList.remove('visible'),8000);
@@ -175,7 +182,7 @@ document.getElementById('reference')?.addEventListener('click',()=>{window.locat
 // QA-only browser probe: movement, jump, reset and camera tests can verify actual frames.
 if(new URLSearchParams(window.location.search).has('qa')){
   window.__LN_A01A__={
-    state:()=>({...state,apex:jumpApex,yaw,pitch,cameraX:camera.position.x,cameraY:camera.position.y,
+    state:()=>({...state,apex:jumpApex,yaw,pitch,portraitTouch,cameraDistance,cameraX:camera.position.x,cameraY:camera.position.y,
       cameraZ:camera.position.z,started,joyX,joyY}),
     reset:resetGame
   };
