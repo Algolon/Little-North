@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {rng, palette, createSnowSpruce, createRock} from './procedural.js';
 import {makeCabin} from './cabin.js';
+import {createHeroSpruce} from './hero-spruce.js';
 
 // A deterministic snowfield is shared by rendering, fox motion and scatter placement.
 export function heightAt(x,z) {
@@ -37,7 +38,7 @@ export function makeWorld(scene) {
     const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.46,h*.40,7),summit);
     cap.position.set(x,h*.81-1.8,z);cap.rotation.y=i*.48;world.add(cap);
   });
-  const hero=createSnowSpruce({seed:19,height:9.6,hero:true});
+  const hero=createHeroSpruce({seed:19,height:9.6});
   atGround(hero,8.6,-9.7,-.05);world.add(hero);
   const oak=createSnowSpruce({seed:123,height:7.4,hero:true});
   atGround(oak,12.3,-15.8,-.05);world.add(oak);
