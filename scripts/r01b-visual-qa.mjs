@@ -11,7 +11,7 @@ const browser=await chromium.launch({headless:true,args:[
   '--enable-webgl','--use-gl=angle','--use-angle=swiftshader'
 ]});
 const problems=[],shots=[];
-let bench=null;
+let bench=null,worldBench=null;
 async function capture(label,route,{width=820,height=820,view}={}){
  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1});
  const page=await context.newPage();
@@ -20,6 +20,10 @@ async function capture(label,route,{width=820,height=820,view}={}){
  const response=await page.goto(base+'/'+route,{waitUntil:'networkidle',timeout:65000});
  if(!response||response.status()!==200)throw new Error(label+' page response '+response?.status());
  await page.waitForTimeout(1100);
+ if(label==='world'){
+   await page.getByRole('button',{name:/EXPLORE THE SNOW/}).click();
+   await page.waitForTimeout(250);
+ }
  if(view)await page.keyboard.press(view);
  await page.waitForTimeout(450);
  const img=await page.screenshot({type:'jpeg',quality:83});
@@ -49,6 +53,11 @@ async function capture(label,route,{width=820,height=820,view}={}){
      return values;
    });
  }
+ if(label==='world'){
+   await page.keyboard.press('p');
+   await page.waitForFunction(()=>document.querySelector('#stats')?.textContent?.includes('Draw calls:'),null,{timeout:18000});
+   worldBench=await page.locator('#stats').innerText();
+ }
  await context.close();
 }
 try{
@@ -66,9 +75,10 @@ try{
 } catch(err){problems.push(String(err));}
 finally{
  await browser.close();
- await fs.writeFile(path.join(folder,'r01b-results.json'),JSON.stringify({ok:!problems.length,bench,shots,problems},null,2));
+ await fs.writeFile(path.join(folder,'r01b-results.json'),JSON.stringify({ok:!problems.length,bench,worldBench,shots,problems},null,2));
 }
 console.log('LN-R01b geometry report:',JSON.stringify(bench));
+console.log('LN-R01b in-world renderer report:',worldBench);
 console.log('LN-R01b image labels:',shots.map(s=>s.label));
 if(problems.length){console.error('LN-R01b QA FAILED',problems);process.exitCode=1;}
 else console.log('LN-R01b QA PASS (technical only, visual approval outstanding)');
