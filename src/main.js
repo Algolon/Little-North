@@ -34,6 +34,7 @@ const cameraLook=new THREE.Vector3(),targetLook=new THREE.Vector3(),desiredCamer
 const keys=new Set();
 let joyX=0,joyY=0,orbitPointer=null,lastX=0,lastY=0;
 let joystickPointer=null,jumpQueued=false,showStats=false,started=false;
+let jumpApex=-Infinity;
 
 const instructions=document.getElementById('instructions');
 const stats=document.getElementById('stats'),jump=document.getElementById('jump');
@@ -73,7 +74,7 @@ function clearJoystick(){
 function resetGame(){
   state=createMovementState(initial.x,initial.z,heightAt);
   yaw=initial.yaw;pitch=initial.pitch;cameraDistance=initial.distance;
-  jumpQueued=false;keys.clear();clearJoystick();snapCamera();
+  jumpQueued=false;keys.clear();clearJoystick();jumpApex=state.y;snapCamera();
 }
 resetGame();
 
@@ -144,6 +145,7 @@ function tick(timeMs){
     },dt,heightAt,obstacles);
     jumpQueued=false;
   }
+  jumpApex=Math.max(jumpApex,state.y);
   setFoxPose();
   fox.userData.animate(elapsed,horizontalSpeed(state));
   desiredCameraAt();
@@ -173,7 +175,7 @@ document.getElementById('reference')?.addEventListener('click',()=>{window.locat
 // QA-only browser probe: movement, jump, reset and camera tests can verify actual frames.
 if(new URLSearchParams(window.location.search).has('qa')){
   window.__LN_A01A__={
-    state:()=>({...state,yaw,pitch,cameraX:camera.position.x,cameraY:camera.position.y,
+    state:()=>({...state,apex:jumpApex,yaw,pitch,cameraX:camera.position.x,cameraY:camera.position.y,
       cameraZ:camera.position.z,started,joyX,joyY}),
     reset:resetGame
   };
