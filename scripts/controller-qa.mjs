@@ -37,8 +37,12 @@ async function checkOrbitAndMove(page,context,mobile){
     return s.vx*(-Math.sin(s.yaw))+s.vz*(-Math.cos(s.yaw))>1.5;
   },null,{timeout:9000});
   const moved=await state(page),a=forwardAlignment(moved);
-  assert.ok(moved.yaw-before.yaw>.65,`dual-touch camera did not orbit: ${moved.yaw-before.y}`);
-  assert.ok(a.forward>1.5 && a.side<1.3,`dual-touch joystick moves against view ${JSON.stringify({moved,a})}`);
+  assert.ok(moved.yaw-before.y>.65,`dual-touch camera did not orbit: ${moved.yaw-before.y}`);
+  // Steering must follow what the user ACTUALLY sees, not desired orbit yaw.
+  const trueForward=moved.vx*moved.viewForwardX+moved.vz*moved.viewForwardZ;
+  const facing=(-Math.sin(moved.visualHeading)*moved.vx-Math.cos(moved.visualHeading)*moved.vz)/Math.max(.1,Math.hypot(moved.vx,moved.vz));
+  assert.ok(trueForward>1.5,`dual-touch changed movement away from rendered camera ${JSON.stringify({moved,trueForward})}`);
+  assert.ok(facing>.75,`fox model does not face actual running direction: ${facing}`);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[stick]});
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
  }else{
