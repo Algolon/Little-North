@@ -72,8 +72,7 @@ function bough(length, halfWidth, drop, snow = false, seed = 0) {
   for (let i = 0; i < stations.length - 1; i++) {
     const a = i * 3, b = (i + 1) * 3;
     indices.push(a, b, a + 1, a + 1, b, b + 1, a + 1, b + 1, a + 2, a + 2, b + 1, b + 2);
-    // Doubled underside gives convincing material from any azimuth.
-    indices.push(a + 1, b, a, b + 1, b, a + 1, a + 2, b + 1, a + 1, b + 2, b + 1, a + 2);
+    // Single winding preserves valid smooth face normals; material handles the back side.
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
