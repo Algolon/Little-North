@@ -197,7 +197,7 @@ document.getElementById('reference')?.addEventListener('click',()=>{window.locat
 // QA-only browser probe: movement, jump, reset and camera tests can verify actual frames.
 if(new URLSearchParams(window.location.search).has('qa')){
   window.__LN_A01A__={
-    state:()=>({...state,apex:jumpApex,yaw,pitch,portraitTouch,cameraDistance,frameRate,visualHeading:fox.rotation.y,cameraX:camera.position.x,cameraY:camera.position.y,
+    state:()=>({...state,apex:jumpApex,yaw,pitch,portraitTouch,cameraDistance,frameRate,visualHeading:fox.rotation.y,viewForwardX:viewForward.x,viewForwardZ:viewForward.z,cameraX:camera.position.x,cameraY:camera.position.y,
       cameraZ:camera.position.z,started,joyX,joyY}),
     reset:resetGame
   };
