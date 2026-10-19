@@ -104,7 +104,7 @@ function snowMantle(length,width,drop,seed){
   const rand=rng(seed),phase=rand()*6.283,tipBias=.86+rand()*.12;
   return loftGeometry(7,9,(u,v)=>{
     const a=v*Math.PI*2;
-    const shape=Math.pow(Math.sin(Math.PI*clamp(u,.001,.999)),.57);
+    const shape=Math.pow(Math.sin(Math.PI*clamp(u,.001,.999)),.48);
     const bulge=(.8+.25*Math.sin(u*8+phase));
     const w=width*shape*bulge*(1+.04*Math.sin(u*18+phase));
     const yPath=-drop*u*u+.18+.085*Math.sin(Math.PI*u);
@@ -142,12 +142,12 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
     batch.add(r,i===3?'barkShadow':'trunk',local);r.dispose();
   }
 
-  const tiers=10;
+  const tiers=9;
   for(let tier=0;tier<tiers;tier++){
-    const t=tier/(tiers-1),y=height*(.16+.72*t);
-    const branchCount=clamp(Math.round(3.9+random()*1.45-t*.55),3,5);
+    const t=tier/(tiers-1),y=height*(.255+.635*t);
+    const branchCount=clamp(Math.round(3.3+random()*1.55-t*.35),3,5);
     const phase=random()*6.283;
-    const tierLength=height*(.34*Math.pow(1-t,1.10)+.032);
+    const tierLength=height*(.365*Math.pow(1-t,1.10)+.035);
     const stagger=(random()-.5)*height*.035;
     for(let arm=0;arm<branchCount;arm++){
       let az=phase+arm/branchCount*Math.PI*2+(random()-.5)*.35;
@@ -162,23 +162,23 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
       b1.dispose();b2.dispose();
 
       // Central cluster: a three-dimensional, sagging long bough.
-      const central=needleSpray(len*.78,len*(.145+random()*.025),
+      const central=needleSpray(len*.63,len*(.13+random()*.027),
         .14+len*.058,drop*.92,seed+1000+tier*97+arm*67);
       const material=arm%4===0?'pineDeep':arm%3===0?'pineWarm':'pine';
-      batch.add(central,material,branchFrame(level,az,0,-.10,len*.21));
+      batch.add(central,material,branchFrame(level,az,0,-.10,len*.34));
       central.dispose();
 
       // Sprays fanning to both sides of each primary branch: organic outline.
-      const sprayCount=tier<7?4:3;
+      const sprayCount=tier<6?3:2;
       for(let s=0;s<sprayCount;s++){
         const u=(s+.92)/(sprayCount+1.55);
-        const offset=(u-.1)*len;
-        const lateralLen=len*(.35+random()*.16)*(1-u*.25);
+        const offset=(.24+u*.76)*len;
+        const lateralLen=len*(.31+random()*.15)*(1-u*.20);
         for(const side of [-1,1]){
           const rotation=side*(.43+random()*.39);
           const localY=-drop*u*u-.06;
           const spread=needleSpray(lateralLen,
-            lateralLen*(.19+random()*.08),
+            lateralLen*(.16+random()*.065),
             .09+lateralLen*.075,lateralLen*(.12+random()*.16),
             seed+tier*780+arm*103+s*29+(side+1)*23);
           const frameSide=branchFrame(level,az,0,localY,offset,rotation);
@@ -188,7 +188,7 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
           // 3D tuft fingers cut natural little notches into the outline.
           for(let leaf=0;leaf<2;leaf++){
             const leafLen=lateralLen*(.29+random()*.15);
-            const twigLeaf=needleSpray(leafLen,leafLen*.19,.045+leafLen*.04,
+            const twigLeaf=needleSpray(leafLen,leafLen*.16,.045+leafLen*.04,
               leafLen*.12,seed+40000+tier*1031+arm*103+s*13+leaf*3);
             batch.add(twigLeaf,(tier+arm+s+leaf)%4===0?'pineDeep':tint,
               branchFrame(level,az,side*len*.018,
@@ -198,7 +198,7 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
           }
 
           // Snow is selectively placed on upper facing clusters.
-          if(random()<snowCover*(t>.75?.62:1.12) && (s%2===0 || random()<.42)){
+          if(random()<snowCover*(t>.75?.65:1.15) && (s%2===0 || random()<.35)){
             const capLen=lateralLen*(.83+random()*.10);
             const cap=snowMantle(capLen,
               lateralLen*(.25+random()*.065),lateralLen*.15,
@@ -211,42 +211,46 @@ export function createHeroSpruce({seed=19,height=9.6,snowCover=.76}={}){
       }
       // Large irregular quilts of snow over the central primary boughs.
       if(random()<snowCover*(.94+t*.05)){
-        snowFinger(batch,level,az,0,.015,len*.17,
-          len*(.79+random()*.13),len*(.21+random()*.065),
+        snowFinger(batch,level,az,0,.045,len*.32,
+          len*(.62+random()*.10),len*(.255+random()*.055),
           drop*.79,seed+1200+tier*125+arm*35);
       }
     }
   }
 
-  // Crown remains continuous with primary branches, not an isolated spike.
-  for(let i=0;i<5;i++){
-    const y=height*(.879+i*.021);
-    const count=i<3?4:3;
+  // Separate sculpted crown whorls lead into a SINGLE upright tapered terminal.
+  // Avoid the old double-antenna tip: no horizontal tuft can masquerade as a crown.
+  for(let i=0;i<4;i++){
+    const y=height*(.888+i*.015);
+    const count=i<2?4:3;
     for(let j=0;j<count;j++){
-      const az=j*Math.PI*2/count+i*.38+(random()-.5)*.3;
-      const len=height*(.09-i*.014);
-      const tuft=needleSpray(len,len*.20,len*.09,len*.19,
-        seed+80000+i*17+j*13);
-      batch.add(tuft,(i+j)%3===0?'pineWarm':'pine',
-        branchFrame(y,az));tuft.dispose();
-      if((i+j)%3!==2){
-        const cap=snowMantle(len*.79,len*.20,len*.16,seed+90000+i*13+j*19);
-        batch.add(cap,'snow',branchFrame(y,az,0,.035,.045));
+      const az=j*Math.PI*2/count+i*.37+(random()-.5)*.45;
+      const len=height*(.082-i*.013);
+      const tuft=needleSpray(len,len*.17,len*.075,len*.13,seed+80000+i*17+j*13);
+      batch.add(tuft,(i+j)%3===0?'pineWarm':'pine',branchFrame(y,az,0,0,.01));
+      tuft.dispose();
+      if((i+j)%4!==2){
+        const cap=snowMantle(len*.79,len*.21,len*.12,seed+90000+i*13+j*19);
+        batch.add(cap,'snow',branchFrame(y,az,0,.045,.025));
         cap.dispose();
       }
     }
   }
-  // Small irregular last tip and soft cap; no cone primitives.
-  const tip=needleSpray(height*.112,height*.029,height*.024,height*.027,seed+703);
-  batch.add(tip,'pine',branchFrame(height*.861,0));
-  tip.dispose();
-  const topSnow=snowMantle(height*.072,height*.027,height*.024,seed+903);
-  batch.add(topSnow,'snow',branchFrame(height*.887,0,0,.025,.018));
-  topSnow.dispose();
+  const upright=loftGeometry(9,10,(u,v)=>{
+    const a=v*Math.PI*2,r=height*.024*Math.pow(1-u,.88)+.002;
+    return [Math.cos(a)*r,height*(.916+.075*u),Math.sin(a)*r];
+  });
+  batch.add(upright,'pine');upright.dispose();
+  // A single delicate continuous snow hood caps that terminal.
+  const hood=loftGeometry(8,10,(u,v)=>{
+    const a=v*Math.PI*2,r=height*.018*Math.pow(1-u,.71)+.001;
+    return [Math.cos(a)*r,height*(.961+.046*u),Math.sin(a)*r];
+  });
+  batch.add(hood,'snow');hood.dispose();
 
   const object=batch.build(materials);
   object.name='LN-R01b-premium-hero-spruce';
-  object.userData.styleVersion='LN-R01b-v0.1';
+  object.userData.styleVersion='LN-R01b-v0.3';
   object.userData.triangles=[...batch.layers.values()].reduce((n,l)=>n+l.triangles.length/3,0);
   object.userData.drawCalls=object.children.length;
   object.userData.seed=seed;
