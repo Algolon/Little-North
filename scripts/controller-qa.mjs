@@ -30,8 +30,7 @@ async function check(label,viewport,mobile){
    const stopped=await state(page);
    assert.ok(Math.abs(stopped.vz)<.1,`mobile stop failed: ${JSON.stringify(stopped)}`);
    await page.locator('#jump').click();
-   await page.waitForTimeout(170);
-   assert.ok(!(await state(page)).grounded,'mobile hop should leave ground');
+   await page.waitForFunction(()=>window.__LN_A01A__?.state()?.jumpCount===1,null,{timeout:9000});
  } else {
    await page.keyboard.down('w');await page.waitForTimeout(950);
    const moved=await state(page);
@@ -39,13 +38,13 @@ async function check(label,viewport,mobile){
    await page.keyboard.up('w');
    await page.waitForFunction(()=>Math.abs(window.__LN_A01A__?.state()?.vz ?? 100)<.1,null,{timeout:9000});
    assert.ok(Math.abs((await state(page)).vz)<.1,`desktop stop should brake: ${JSON.stringify(await state(page))}`);
-   await page.keyboard.press('Space');await page.waitForTimeout(170);
-   assert.ok(!(await state(page)).grounded,'desktop hop should leave ground');
+   await page.keyboard.press('Space');await page.waitForFunction(()=>window.__LN_A01A__?.state()?.jumpCount===1,null,{timeout:9000});
  }
  await page.waitForFunction(()=>{const s=window.__LN_A01A__?.state();return s?.grounded && s?.jumpCount===1},null,{timeout:9000});
  const landed=await state(page);
  assert.equal(landed.grounded,true,`${label} must land`);
  assert.equal(landed.jumpCount,1,`${label} must jump once`);
+ assert.ok(landed.apex>start.y+.35,`${label} hop height insufficient: ${landed.apex} vs ${start.y}`);
  await page.getByRole('button',{name:/RESET/}).click();
  const reset=await state(page);
  assert.ok(Math.abs(reset.x+4)<.02&&Math.abs(reset.z-4)<.02,`${label} reset failed`);
