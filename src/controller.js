@@ -70,7 +70,7 @@ function moveAlongAxes(s,dx,dz,heightAt,obstacles){
  * input = {forward:-1..1,right:-1..1,yaw:radians,run:boolean,jumpPressed:boolean}
  */
 export function advanceMovement(state,input,frameDt,heightAt,obstacles=[]){
-  const dt=clamp(Number.isFinite(frameDt)?frameDt:0,0,.05);
+  const dt=clamp(Number.isFinite(frameDt)?frameDt:0,0,.10);
   if(dt<=0)return state;
   const n=Math.ceil(dt/(1/60)),h=dt/n;
   for(let i=0;i<n;i++){
@@ -79,14 +79,17 @@ export function advanceMovement(state,input,frameDt,heightAt,obstacles=[]){
     const stick=hypot(f,right);
     if(stick>1){f/=stick;right/=stick;}
     if(stick<.085){f=right=0;}
+    // LN-A01a-R2: use the ACTUAL VIEW direction rather than the desired orbit yaw.
+    // The camera's follow smoothing can lag behind yaw while the user swipes.
+    // Steering from desired yaw previously gave a visible input/visual mismatch.
     const yaw=input.yaw||0;
-    const sin=Math.sin(yaw),cos=Math.cos(yaw);
-    // Camera is placed at (+sin(yaw), +cos(yaw)) relative to the fox.
-    // Forward therefore points AWAY from that camera: (-sin(yaw), -cos(yaw)).
-    // The camera-right basis is (+cos(yaw), -sin(yaw)).
-    // Never flip these signs: it makes touch movement reverse as the view orbits.
-    const vx=(-sin*f+cos*right)*(input.run?MOTION.run:MOTION.walk);
-    const vz=(-cos*f-sin*right)*(input.run?MOTION.run:MOTION.walk);
+    let fx=Number.isFinite(input.viewForwardX)?input.viewForwardX:-Math.sin(yaw);
+    let fz=Number.isFinite(input.viewForwardZ)?input.viewForwardZ:-Math.cos(yaw);
+    const forwardLength=hypot(fx,fz)||1;
+    fx/=forwardLength;fz/=forwardLength;
+    // Flat camera-right is (-forward.z, forward.x); local fox forward is -Z.
+    const vx=(fx*f - fz*right)*(input.run?MOTION.run:MOTION.walk);
+    const vz=(fz*f + fx*right)*(input.run?MOTION.run:MOTION.walk);
     const diffX=vx-s.vx,diffZ=vz-s.vz,diffLength=hypot(diffX,diffZ);
     const accel=s.grounded?(stick>.085?MOTION.acceleration:MOTION.braking):MOTION.airAcceleration;
     const amount=Math.min(diffLength,accel*h);
@@ -111,7 +114,8 @@ export function advanceMovement(state,input,frameDt,heightAt,obstacles=[]){
     }
     const moveSpeed=hypot(s.vx,s.vz);
     if(moveSpeed>.12){
-      const goal=Math.atan2(s.vx,-s.vz);
+      // THREE positive Y rotation turns local -Z towards -X, not +X.
+      const goal=Math.atan2(-s.vx,-s.vz);
       s.heading+=clamp(shortest(s.heading,goal),-MOTION.turnSpeed*h,MOTION.turnSpeed*h);
     }
   }
