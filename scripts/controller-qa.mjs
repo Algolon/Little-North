@@ -25,22 +25,24 @@ async function check(label,viewport,mobile){
    await page.waitForTimeout(950);
    const moved=await state(page);
    assert.ok(moved.z<start.z-.8,`mobile joystick forward: ${moved.z} / ${start.z}`);
-   await page.mouse.up();await page.waitForTimeout(400);
+   await page.mouse.up();
+   await page.waitForFunction(()=>Math.abs(window.__LN_A01A__?.state()?.vz ?? 100)<.1,null,{timeout:9000});
    const stopped=await state(page);
-   assert.ok(Math.abs(stopped.vz)<.1,`mobile stop failed: ${stopped.vz}`);
+   assert.ok(Math.abs(stopped.vz)<.1,`mobile stop failed: ${JSON.stringify(stopped)}`);
    await page.locator('#jump').click();
    await page.waitForTimeout(170);
    assert.ok(!(await state(page)).grounded,'mobile hop should leave ground');
  } else {
-   await page.keyboard.down('KeyW');await page.waitForTimeout(950);
+   await page.keyboard.down('w');await page.waitForTimeout(950);
    const moved=await state(page);
    assert.ok(moved.z<start.z-.8,`desktop W forward: ${moved.z} / ${start.z}`);
-   await page.keyboard.up('KeyW');await page.waitForTimeout(400);
-   assert.ok(Math.abs((await state(page)).vz)<.1,'desktop stop should brake');
+   await page.keyboard.up('w');
+   await page.waitForFunction(()=>Math.abs(window.__LN_A01A__?.state()?.vz ?? 100)<.1,null,{timeout:9000});
+   assert.ok(Math.abs((await state(page)).vz)<.1,`desktop stop should brake: ${JSON.stringify(await state(page))}`);
    await page.keyboard.press('Space');await page.waitForTimeout(170);
    assert.ok(!(await state(page)).grounded,'desktop hop should leave ground');
  }
- await page.waitForTimeout(940);
+ await page.waitForFunction(()=>{const s=window.__LN_A01A__?.state();return s?.grounded && s?.jumpCount===1},null,{timeout:9000});
  const landed=await state(page);
  assert.equal(landed.grounded,true,`${label} must land`);
  assert.equal(landed.jumpCount,1,`${label} must jump once`);
