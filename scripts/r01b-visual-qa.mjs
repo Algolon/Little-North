@@ -27,13 +27,13 @@ async function capture(label,route,{width=820,height=820,view}={}){
  const filename=path.join(folder,'r01b-'+label+'.jpg');
  await fs.writeFile(filename,img);
  shots.push({label,bytes:img.length,filename});
- if(label==='three-quarter'){
-   // Deliberately small reference image so reviewer can inspect actual CI render
-   // via logs as well as downloadable screenshot artifacts.
-   const thumb=await page.screenshot({type:'jpeg',quality:55});
-   console.log('LN_R01B_VIEW_BEGIN');
+ if(['front','rear','three-quarter','detail','world'].includes(label)){
+   // Encode proof directly into CI logs for actual model-side visual inspection.
+   // Final full-quality JPGs remain available in the Actions artifact.
+   const thumb=await page.screenshot({type:'jpeg',quality:41});
+   console.log('LN_R01B_FRAME_'+label+'_BEGIN');
    console.log(thumb.toString('base64'));
-   console.log('LN_R01B_VIEW_END');
+   console.log('LN_R01B_FRAME_'+label+'_END');
  }
  if(label==='three-quarter'){
    bench=await page.evaluate(async()=>{
@@ -42,6 +42,8 @@ async function capture(label,route,{width=820,height=820,view}={}){
      const o=createHeroSpruce({seed:19,height:9.6});
      const size=new Vector3();new Box3().setFromObject(o).getSize(size);
      const values={triangles:o.userData.triangles,materialBatches:o.children.length,
+       actualSceneDrawCalls:Number(document.body.dataset.lnRenderCalls),
+       actualRenderedTriangles:Number(document.body.dataset.lnRenderedTriangles),
        size:{x:size.x,y:size.y,z:size.z},unindexedVertices:o.children.reduce((n,m)=>n+(m.geometry.getAttribute('position')?.count||0),0)};
      o.traverse(ch=>{if(ch.geometry)ch.geometry.dispose()});
      return values;
