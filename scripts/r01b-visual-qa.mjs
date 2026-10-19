@@ -54,9 +54,8 @@ async function capture(label,route,{width=820,height=820,view}={}){
    });
  }
  if(label==='world'){
-   await page.keyboard.press('p');
-   await page.waitForFunction(()=>document.querySelector('#stats')?.textContent?.includes('Draw calls:'),null,{timeout:18000});
-   worldBench=await page.locator('#stats').innerText();
+   worldBench=await page.evaluate(()=>window.__LN_HERO_WORLD_STATS__||null);
+   if(!worldBench||worldBench.drawCalls<1)problems.push('in-world renderer counters were not produced');
  }
  await context.close();
 }
