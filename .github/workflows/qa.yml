@@ -34,11 +34,38 @@ jobs:
         run: npm run visual:qa
       - name: Verify movement on desktop and mobile in Chromium
         run: npm run qa:controller
-      - name: Capture hero spruce comparison, turntable and in-world proof
-        run: npm run qa:hero
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: a01-visual-review
           path: qa-evidence/
+          retention-days: 14
+  hero-sculpt-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install and compile hero sculpture
+        run: |
+          npm install --no-audit --no-fund
+          npm run test:syntax
+          npm run build
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Start Vite
+        run: |
+          npm run dev -- --port 4173 > /tmp/little-north-vite.log 2>&1 &
+          for i in {1..40}; do curl -fsS http://127.0.0.1:4173 > /dev/null && exit 0; sleep 2; done
+          cat /tmp/little-north-vite.log
+          exit 1
+      - name: Render LN-R01b nine-angle actual WebGL evidence
+        run: npm run qa:hero
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r01b-hero-visual-review
+          path: qa-evidence/r01b-*
           retention-days: 14
