@@ -1,0 +1,11 @@
+import * as THREE from 'three';
+import {createSnowSpruce} from './procedural.js';
+const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.16;renderer.shadowMap.enabled=true;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0xc1d9e2);const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,120);
+scene.add(new THREE.HemisphereLight(0xe8f7ff,0x789aa2,2.2));const sun=new THREE.DirectionalLight(0xffe3be,2.4);sun.position.set(-5,12,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const object=createSnowSpruce({seed:19,height:9.6,hero:true});scene.add(object);
+const ground=new THREE.Mesh(new THREE.CylinderGeometry(5.4,5.5,.7,48),new THREE.MeshStandardMaterial({color:0xeaf3f4,roughness:.92}));ground.position.y=-.4;ground.receiveShadow=true;scene.add(ground);
+let orbit=0,locked=false;const angles=[0,Math.PI*.5,Math.PI,Math.PI*1.5];
+window.addEventListener('keydown',e=>{if('1234'.includes(e.key)){orbit=angles[Number(e.key)-1];locked=true;}if(e.code==='KeyP'){const el=document.querySelector('#stats');el.hidden=!el.hidden;el.textContent=`Hero tree triangles: ${object.userData.triangles.toLocaleString()} · Drawables: ${object.children.length}`;}});
+function render(ms){requestAnimationFrame(render);if(!locked)orbit=ms*.0002;camera.position.set(Math.sin(orbit)*22,9.8,Math.cos(orbit)*22);camera.lookAt(0,4.6,0);renderer.render(scene,camera);}requestAnimationFrame(render);
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
