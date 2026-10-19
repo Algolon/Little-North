@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Little North — Arctic Storybook</title>
+<meta name="theme-color" content="#c8e1ec">
+<link rel="stylesheet" href="./style.css">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}</script>
+</head><body>
+<canvas id="scene" aria-label="Little North interactive 3D winter scene"></canvas>
+<header><div class="eyebrow">LITTLE NORTH · ART CALIBRATION A01</div><div class="brand">A tiny adventure begins.</div></header>
+<div class="top-actions"><button id="reference" title="View standalone spruce sculpt">TREE STUDY ↗</button><button id="reset" title="Reset fox position">↺ RESET</button></div>
+<div id="instructions" class="instructions">WASD to walk · Shift to run · Space to hop · Drag to look · P for diagnostics</div>
+<div id="stats" class="stats" hidden></div>
+<div id="joystick" class="joystick" aria-label="Movement joystick"><div id="joystick-nub"></div></div><button id="jump" aria-label="Hop">HOP</button>
+<div id="intro" class="intro"><div class="intro-card"><div class="eyebrow">AN ARCTIC STORYBOOK EXPERIMENT</div><div class="intro-title">Little North</div><p>A small fox, an enormous world.<br>Walk beyond the warmth of home.</p><button id="begin">EXPLORE THE SNOW →</button><small>Phase A01 · Work in progress · Sculpted Arctic Storybook</small></div></div>
+<script type="module" src="./src/main.js"></script>
+</body></html>
