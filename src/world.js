@@ -30,8 +30,8 @@ export function makeWorld(scene) {
   const ocean=new THREE.Mesh(new THREE.PlaneGeometry(190,190),material(0x588e9d,{metalness:.12,roughness:.4,transparent:true,opacity:.85}));
   ocean.rotation.x=-Math.PI/2;ocean.position.y=-1.2;ocean.receiveShadow=true;world.add(ocean);
   // Sculpted distant mountain shapes frame the vignette but do not form playable routes.
-  const mountain=material(0x708d9e,{flatShading:true});const summit=material(0xe5edf0,{flatShading:true});
-  [[-43,-33,20,22],[20,-38,23,29],[39,-31,16,19],[-16,-45,13,17],[9,-45,15,23]].forEach(([x,z,r,h],i)=>{
+  const mountain=material(0x9bb7c5,{flatShading:true});const summit=material(0xe5eef0,{flatShading:true});
+  [[-55,-62,19,20],[17,-69,23,29],[49,-62,17,20],[-22,-70,15,19],[1,-79,17,25]].forEach(([x,z,r,h],i)=>{
     const peak=new THREE.Mesh(new THREE.ConeGeometry(r,h,7,1),mountain);
     peak.position.set(x,h*.43-1.8,z);peak.rotation.y=i*.48;peak.receiveShadow=true;world.add(peak);
     const cap=new THREE.Mesh(new THREE.ConeGeometry(r*.46,h*.40,7),summit);
@@ -41,7 +41,7 @@ export function makeWorld(scene) {
   atGround(hero,8.6,-9.7,-.05);world.add(hero);
   const oak=createSnowSpruce({seed:123,height:7.4,hero:true});
   atGround(oak,12.3,-15.8,-.05);world.add(oak);
-  const cabin=makeCabin();atGround(cabin,-9.6,-14,.16);cabin.rotation.y=-.22;world.add(cabin);
+  const cabin=makeCabin();atGround(cabin,-9.6,-14,.16);cabin.rotation.y=Math.PI-.22;world.add(cabin);
   const rand=rng(61);
   // Forest wraps the edge of the scene and forms an organic view corridor.
   const locations = [
