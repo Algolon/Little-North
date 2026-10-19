@@ -48,7 +48,7 @@ test('moving forward while rotating view follows the new camera direction',()=>{
  const before={x:s.x,z:s.z};
  tick(s,{forward:1,yaw:Math.PI/2},60);
  assert.ok(s.x<before.x-3,`yaw turn should travel toward -X, x=${s.x}`);
- assert.ok(Math.abs(s.heading+Math.PI/2)<.04,`fox heading=${s.heading}`);
+ assert.ok(Math.abs(s.heading-Math.PI/2)<.04,`fox heading=${s.heading}`);
 });
 test('jump is discrete, lands, cannot chain without new press',()=>{
   const s=createMovementState(0,0,flat);
@@ -101,4 +101,35 @@ test('no-input and zero dt do not create NaN or movement',()=>{
   tick(s,{},60);
   assert.equal(s.x,1);assert.equal(s.z,1);
   assert.ok(Object.values(s).every(v=>typeof v!=='number'||Number.isFinite(v)));
+});
+
+
+// The core bug in the owner's footage: the visual fox faced opposite travel.
+// A three.js object with local -Z forward rotated by heading has travel
+// (-sin(heading), -cos(heading)). Its facing dot movement must be positive.
+test('mesh local -Z forward matches velocity on every cardinal and diagonal move',()=>{
+ for(const yaw of [0,Math.PI/4,Math.PI/2,Math.PI,Math.PI*1.5]){
+  for(const stick of [{forward:1,right:0},{forward:0,right:1},{forward:.7,right:.7}]){
+   const st=createMovementState(0,0,flat);
+   tick(st,{...stick,yaw},70);
+   const speed=horizontalSpeed(st);
+   const alignment=(-Math.sin(st.heading)*st.vx-Math.cos(st.heading)*st.vz)/speed;
+   assert.ok(alignment>.995,`yaw=${yaw} stick=${JSON.stringify(stick)} facing alignment=${alignment}`);
+  }
+ }
+});
+test('explicit visible-camera vector overrides stale desired yaw',()=>{
+ const st=createMovementState(0,0,flat);
+ // Desired yaw still 0, but the rendered camera has already orbited right.
+ tick(st,{forward:1,yaw:0,viewForwardX:-1,viewForwardZ:0},60);
+ assert.ok(st.x < -3.1,`actual view forward should be -X, got x=${st.x}`);
+ assert.ok(Math.abs(st.z)<.01);
+ const face={x:-Math.sin(st.heading),z:-Math.cos(st.heading)};
+ assert.ok(face.x<-.99,`visual fox should face -X, heading=${st.heading}`);
+});
+test('step duration on 10fps mobile frame covers real elapsed time',()=>{
+ const slow=createMovementState(0,0,flat),fast=createMovementState(0,0,flat);
+ tick(slow,{forward:1},10,.1);
+ tick(fast,{forward:1},60,1/60);
+ assert.ok(Math.abs(slow.z-fast.z)<.025,`10fps time loss=${slow.z-fast.z}`);
 });
