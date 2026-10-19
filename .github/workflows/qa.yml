@@ -34,6 +34,8 @@ jobs:
         run: npm run visual:qa
       - name: Verify movement on desktop and mobile in Chromium
         run: npm run qa:controller
+      - name: Capture hero spruce comparison, turntable and in-world proof
+        run: npm run qa:hero
       - uses: actions/upload-artifact@v4
         if: always()
         with:
