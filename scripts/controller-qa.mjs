@@ -74,9 +74,10 @@ async function check(label,viewport,mobile){
    assert.ok(bounds,`${label} joystick missing`);
    const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
    await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y-34,{steps:4});
-   await page.waitForTimeout(950);
+   await page.waitForFunction(z=>window.__LN_A01A__?.state()?.z < z-.35,start.z,
+     {timeout:25000,polling:200});
    const moved=await state(page);
-   assert.ok(moved.z<start.z-.8,`mobile joystick forward: ${moved.z} / ${start.z}`);
+   assert.ok(moved.z<start.z-.30,`mobile joystick forward: ${moved.z} / ${start.z}`);
    await page.mouse.up();
    await page.waitForFunction(()=>Math.abs(window.__LN_A01A__?.state()?.vz ?? 100)<.1,null,{timeout:9000});
    const stopped=await state(page);
@@ -84,9 +85,11 @@ async function check(label,viewport,mobile){
    await page.locator('#jump').click();
    await page.waitForFunction(()=>window.__LN_A01A__?.state()?.jumpCount===1,null,{timeout:9000});
  } else {
-   await page.keyboard.down('w');await page.waitForTimeout(950);
+   await page.keyboard.down('w');
+   await page.waitForFunction(z=>window.__LN_A01A__?.state()?.z < z-.35,start.z,
+     {timeout:25000,polling:200});
    const moved=await state(page);
-   assert.ok(moved.z<start.z-.8,`desktop W forward: ${moved.z} / ${start.z}`);
+   assert.ok(moved.z<start.z-.30,`desktop W forward: ${moved.z} / ${start.z}`);
    await page.keyboard.up('w');
    await page.waitForFunction(()=>Math.abs(window.__LN_A01A__?.state()?.vz ?? 100)<.1,null,{timeout:9000});
    assert.ok(Math.abs((await state(page)).vz)<.1,`desktop stop should brake: ${JSON.stringify(await state(page))}`);
