@@ -85,6 +85,11 @@ function resetGame(){
   jumpQueued=false;keys.clear();clearJoystick();jumpApex=state.y;snapCamera();
 }
 resetGame();
+// Strictly opt-in photography pose for in-world art QA. Does not affect gameplay.
+if(new URLSearchParams(window.location.search).has('heroReview')){
+  state=createMovementState(7.5,-.5,heightAt);
+  yaw=-.14;pitch=.19;cameraDistance=8.4;snapCamera();
+}
 
 window.addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
