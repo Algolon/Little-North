@@ -76,6 +76,10 @@ function render(ms){
   camera.position.set(Math.sin(view.angle)*view.dist,view.elev,Math.cos(view.angle)*view.dist);
   camera.lookAt(focus);
   renderer.render(scene,camera);
+  if(params.has('qa')){
+    document.body.dataset.lnRenderCalls=String(renderer.info.render.calls);
+    document.body.dataset.lnRenderedTriangles=String(renderer.info.render.triangles);
+  }
   if(ms-lastUpdate>800){lastUpdate=ms;
     if(!stats.hidden)stats.textContent=`LN-R01b · ${Math.round(object.userData.triangles).toLocaleString()} tris · ${renderer.info.render.calls} renderer calls · ${object.children.length} material batches · view ${active}`;
   }
