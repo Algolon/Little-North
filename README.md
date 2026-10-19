@@ -31,5 +31,9 @@ Desktop: WASD/arrow keys to move, Shift run, Space hop, drag to orbit, mouse whe
 ## Design contract
 See `docs/ART_DIRECTION.md` and `docs/IMG2THREE_STUDY.md`. Quality targets: stylized but crafted (not generic low-poly), coherent geometry from all angles, compact real-time WebGL for future Android browser use.
 
+## Browser QA
+
+A dedicated GitHub Actions workflow (`.github/workflows/qa.yml`) runs syntax checks, a Vite build, and six Chromium screenshots (desktop, mobile and the four spruce angles). The resulting evidence is uploaded as an artifact on the PR run. Pass/fail must be checked in Actions; merely committing the workflow does **not** demonstrate a pass.
+
 ## Deployment
 The repository is private. GitHub Pages visibility/deployment depends on the account/repository settings. The candidate must be visually reviewed before a production deployment. No deployment is configured by this branch.

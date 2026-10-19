@@ -31,6 +31,10 @@ Source: user's first moodboard image, foreground snow-laden evergreen on the rig
 ## Implementation
 `src/procedural.js` uses layered radial asymmetry, custom tapered branch ribbons, top snow ribbons with uneven drooping margins and geometry batching by material. `src/sculpt.js` provides an inspectable four-view test harness.
 
+## Review automation
+
+On pull requests, `.github/workflows/qa.yml` installs Three.js, Vite and Chromium to render the actual Three.js project, and `scripts/visual-qa.mjs` records four spruce azimuth screenshots and desktop/mobile world views. Inspect these screenshots before judging quality.
+
 ## Status
 - Reference analysis: completed.
 - Sculpt code: implemented candidate.

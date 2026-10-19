@@ -1,0 +1,39 @@
+name: Little North · A01 Visual QA
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Validate and build
+        run: |
+          npm run test:syntax
+          npm run build
+      - name: Install headless browser
+        run: npx playwright install --with-deps chromium
+      - name: Start dev server
+        run: |
+          npm run dev -- --port 4173 > /tmp/little-north-vite.log 2>&1 &
+          echo $! > /tmp/little-north-vite.pid
+          for i in {1..40}; do curl -fsS http://127.0.0.1:4173 > /dev/null && exit 0; sleep 2; done
+          cat /tmp/little-north-vite.log
+          exit 1
+      - name: Capture and verify desktop, mobile and tree turntable
+        run: npm run visual:qa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: a01-visual-review
+          path: qa-evidence/
+          retention-days: 14
