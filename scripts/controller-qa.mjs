@@ -7,6 +7,58 @@ const out=process.env.QA_OUTPUT||'qa-evidence';
 await fs.mkdir(out,{recursive:true});
 const errors=[];
 const state=page=>page.evaluate(()=>window.__LN_A01A__?.state());
+// Visual-direction oracle: camera at (sin(yaw),cos(yaw)) means screen-up is (-sin,-cos).
+function forwardAlignment(s){
+ const fx=-Math.sin(s.yaw),fz=-Math.cos(s.yaw);
+ return {forward:s.vx*fx+s.vz*fz,side:Math.abs(s.vx*(-fz)+s.vz*fx)};
+}
+async function checkOrbitAndMove(page,context,mobile){
+ const before=await state(page);
+ if(mobile){
+  assert.equal(before.portraitTouch,true,'mobile art camera profile should be enabled');
+  assert.ok(before.cameraDistance<7,'mobile camera must frame fox more closely');
+  const b=await page.locator('#joystick').boundingBox();
+  const x=b.x+b.width/2,y=b.y+b.height/2;
+  const cdp=await context.newCDPSession(page);
+  // Two simultaneous *touch* pointers: thumb stays on stick while the other
+  // finger orbits the camera. Prior QA used mouse, missing this bug entirely.
+  const stick={x,y:y-32,id:1},look={x:340,y:330,id:2};
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[stick]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[stick,look]});
+  for(const stepX of [275,210,145,80]){
+   look.x=stepX;
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[stick,look]});
+   await page.waitForTimeout(70);
+  }
+  await page.waitForFunction(()=>{const s=window.__LN_A01A__?.state();return s?.yaw>.7 && s?.joyY>.45},null,{timeout:9000});
+  await page.waitForFunction(()=>{
+    const s=window.__LN_A01A__?.state();if(!s)return false;
+    return s.vx*(-Math.sin(s.yaw))+s.vz*(-Math.cos(s.yaw))>1.5;
+  },null,{timeout:9000});
+  const moved=await state(page),a=forwardAlignment(moved);
+  assert.ok(moved.yaw-before.yaw>.65,`dual-touch camera did not orbit: ${moved.yaw-before.y}`);
+  assert.ok(a.forward>1.5 && a.side<1.3,`dual-touch joystick moves against view ${JSON.stringify({moved,a})}`);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[stick]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ }else{
+  const bounds=await page.locator('#scene').boundingBox();
+  const x=bounds.x+bounds.width*.7,y=bounds.y+bounds.height*.5;
+  await page.mouse.move(x,y);await page.mouse.down();
+  await page.mouse.move(x-290,y,{steps:9});await page.mouse.up();
+  const angle=(await state(page)).yaw;
+  assert.ok(angle-before.yaw>.7,`desktop camera should orbit: ${angle-before.yaw}`);
+  await page.keyboard.down('w');
+  await page.waitForFunction(()=>{
+    const s=window.__LN_A01A__?.state();return s && s.vx*(-Math.sin(s.yaw))+s.vz*(-Math.cos(s.yaw))>1.6;
+  },null,{timeout:9000});
+  const moved=await state(page),a=forwardAlignment(moved);
+  assert.ok(a.forward>1.6&&a.side<1.3,`desktop orbit+W should move screen-up, ${JSON.stringify({a,moved})}`);
+  await page.keyboard.up('w');
+ }
+ await page.waitForTimeout(250);
+}
+
 async function check(label,viewport,mobile){
  const context=await browser.newContext({viewport,hasTouch:mobile,isMobile:mobile,deviceScaleFactor:1});
  const page=await context.newPage();
@@ -48,6 +100,7 @@ async function check(label,viewport,mobile){
  await page.getByRole('button',{name:/RESET/}).click();
  const reset=await state(page);
  assert.ok(Math.abs(reset.x+4)<.02&&Math.abs(reset.z-4)<.02,`${label} reset failed`);
+ await checkOrbitAndMove(page,context,mobile);
  await page.screenshot({path:`${out}/a01a-${label}.png`});
  await context.close();
  return {label,initial:{x:start.x,z:start.z},moved:true,jump:landed.jumpCount,reset:true};
