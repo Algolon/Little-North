@@ -4,6 +4,7 @@ import {makeFox} from './fox.js';
 import {createMovementState,advanceMovement,horizontalSpeed} from './controller.js';
 
 // LN-A01a: movement is independent from graphics; fox remains the A01 art proxy.
+const heroReviewQA=new URLSearchParams(window.location.search).has('heroReview');
 const canvas=document.getElementById('scene');
 const mobileInput=window.matchMedia('(pointer:coarse)').matches;
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
@@ -85,6 +86,11 @@ function resetGame(){
   jumpQueued=false;keys.clear();clearJoystick();jumpApex=state.y;snapCamera();
 }
 resetGame();
+// Strictly opt-in photography pose for in-world art QA. Does not affect gameplay.
+if(heroReviewQA){
+  state=createMovementState(7.5,-.5,heightAt);
+  yaw=-.14;pitch=.19;cameraDistance=8.4;snapCamera();
+}
 
 window.addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
@@ -174,6 +180,7 @@ function tick(timeMs){
   camera.lookAt(cameraLook);
   update(elapsed);
   renderer.render(scene,camera);
+  if(heroReviewQA)window.__LN_HERO_WORLD_STATS__={drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles};
   if((showStats || controlsDebug) && Math.floor(now*2)!==Math.floor((now-dt)*2)){
     const s=getStats();
     const speed=horizontalSpeed(state);
