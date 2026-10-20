@@ -2,16 +2,20 @@
   "blender": "4.2.0",
   "source_checkpoint": "972cd78f08d67e03aa473df76a16e3acf650dfc2",
   "method": "Direct continuous-skin ruff sculpt fields, anatomical orbital annuli, beveled almond apertures, triangular conchal bowls, clean resurfacing on preserved .blend mesh",
-  "correction_round": 2,
+  "correction_round": 3,
   "removed_tiny_components": [],
   "export_zero_area_faces_removed": {
     "FOX R01b reduced test mesh": 0,
     "Almond eye -1": 0,
     "Almond eye 1": 0,
-    "Rounded triangular nose": 0
+    "Rounded triangular nose": 0,
+    "Iris -1": 0,
+    "Pupil -1": 0,
+    "Iris 1": 0,
+    "Pupil 1": 0
   },
-  "body_vertices": 424406,
-  "body_polygons": 424404,
+  "body_vertices": 425250,
+  "body_polygons": 424587,
   "eye_surface_samples": [
     {
       "side": -1,
@@ -40,6 +44,7 @@
       ]
     }
   ],
+  "neutral_iris_gaze_study": true,
   "views": [
     "head-three-quarter",
     "head-front",
