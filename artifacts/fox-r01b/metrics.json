@@ -1,0 +1,47 @@
+{
+  "blender": "4.2.0",
+  "source_checkpoint": "972cd78f08d67e03aa473df76a16e3acf650dfc2",
+  "method": "Local scripted sculpt fields, Boolean eye sockets/mouth/ear recesses, connected lids and rooted broad ruff lofts on existing .blend mesh",
+  "body_vertices": 226301,
+  "body_polygons": 224867,
+  "eye_surface_samples": [
+    {
+      "side": -1,
+      "surface": [
+        -0.13699999451637268,
+        -0.5211767554283142,
+        0.8730000257492065
+      ],
+      "normal": [
+        -0.5853576064109802,
+        -0.7406983375549316,
+        0.32973089814186096
+      ]
+    },
+    {
+      "side": 1,
+      "surface": [
+        0.13699999451637268,
+        -0.5211811065673828,
+        0.8730000257492065
+      ],
+      "normal": [
+        0.5841947793960571,
+        -0.7409060001373291,
+        0.33132287859916687
+      ]
+    }
+  ],
+  "views": [
+    "head-three-quarter",
+    "head-front",
+    "head-side",
+    "three-quarter",
+    "front",
+    "side",
+    "rear"
+  ],
+  "art_verdict": "PENDING_VISUAL_REVIEW",
+  "premium_materials": false,
+  "rigged": false
+}
