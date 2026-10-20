@@ -2,7 +2,7 @@
 This uses scripted sculpt displacements, Boolean recesses and rooted lofts;
 not a claim of manual brush sculpting. No gameplay changes or rigging.
 """
-import bpy,math,json
+import bpy,math,json,bmesh
 from pathlib import Path
 from mathutils import Vector,Matrix
 from mathutils.bvhtree import BVHTree
@@ -41,6 +41,7 @@ def front_hit(x,z):
 def mesh_obj(name,vs,fs,material=None):
  me=bpy.data.meshes.new(name);me.from_pydata(vs,[],fs);me.update();o=bpy.data.objects.new(name,me);bpy.context.collection.objects.link(o)
  if material:o.data.materials.append(material)
+ bm=bmesh.new();bm.from_mesh(me);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces));bm.to_mesh(me);bm.free()
  for p in me.polygons:p.use_smooth=True
  return o
 
@@ -71,7 +72,7 @@ for v in body.data.vertices:
  for sign in [-1,1]:
   w=g(x,y,z,(sign*.044,-.63,.785),(.05,.065,.038))
   v.co.y-=.007*w;v.co.x+=sign*.004*w
-surface=bvh();features=[];eye_centers=[]
+surface=bvh();features=[];eye_centers=[];eyes=[]
 # Smooth orbital annuli are carved into the existing head skin.
 eye_frames=[]
 for sign in [-1,1]:
@@ -111,7 +112,7 @@ for s,hit,N,U,V in eye_frames:
   for j in range(K):fs.append((1+k*K+j,1+(k+1)*K+j,1+(k+1)*K+(j+1)%K,1+k*K+(j+1)%K))
  back=len(vs);vs.append(C-N*.016)
  for j in range(K):fs.append((back,1+(R-1)*K+(j+1)%K,1+(R-1)*K+j))
- features.append(mesh_obj('Almond eye '+str(s),vs,fs,dark))
+ eye=mesh_obj('Almond eye '+str(s),vs,fs,dark);features.append(eye);eyes.append((s,C,U,V,N))
 # Authored triangular nose, rounded edges; upper muzzle remains exposed.
 hit,_=front_hit(0,.783);yc=hit.y
 outline=[(-.030,.008),(-.024,.018),(.024,.018),(.030,.008),(.012,-.014),(0,-.019),(-.012,-.014)]
@@ -122,6 +123,10 @@ n=len(outline);fs=[tuple(reversed(range(n))),tuple(range(n,2*n))]
 for j in range(n):fs.append((j,(j+1)%n,(j+1)%n+n,j+n))
 nose=mesh_obj('Rounded triangular nose',vs,fs,dark);features.append(nose)
 bpy.context.view_layer.objects.active=nose;m=nose.modifiers.new('Soft nose perimeter','BEVEL');m.width=.006;m.segments=3;bpy.ops.object.modifier_apply(modifier=m.name)
+# Resurface the clay once after incisions, removing Boolean slivers and blending lids.
+bpy.context.view_layer.objects.active=body
+m=body.modifiers.new('Clean continuous facial sculpt surface','REMESH');m.mode='VOXEL';m.voxel_size=.0032;m.use_smooth_shade=True;bpy.ops.object.modifier_apply(modifier=m.name)
+m=body.modifiers.new('Relax incision edges','SMOOTH');m.factor=.55;m.iterations=2;bpy.ops.object.modifier_apply(modifier=m.name)
 # Mouth incisions follow the pre-Boolean head surface; no floating painted smile.
 for s in [-1,1]:
  pts=[]
@@ -143,10 +148,7 @@ for sign in [-1,1]:
  cutter=mesh_obj('Conchal bowl cutter',vs,fs)
  bpy.context.view_layer.objects.active=cutter;m=cutter.modifiers.new('Rounded inner ear edge','BEVEL');m.width=.008;m.segments=4;bpy.ops.object.modifier_apply(modifier=m.name)
  apply_boolean(cutter,'Sculpt triangular inner ear bowl')
-# Resurface the clay once after incisions, removing Boolean slivers and blending lids.
-bpy.context.view_layer.objects.active=body
-m=body.modifiers.new('Clean continuous facial sculpt surface','REMESH');m.mode='VOXEL';m.voxel_size=.0032;m.use_smooth_shade=True;bpy.ops.object.modifier_apply(modifier=m.name)
-m=body.modifiers.new('Relax incision edges','SMOOTH');m.factor=.55;m.iterations=2;bpy.ops.object.modifier_apply(modifier=m.name)
+
 # Discard only tiny disconnected remnants, fail if a meaningful facial piece is detached.
 import bmesh
 bm=bmesh.new();bm.from_mesh(body.data);remaining=set(bm.verts);groups=[]
@@ -164,6 +166,27 @@ for group in groups[1:]:bmesh.ops.delete(bm,geom=group,context='VERTS')
 bm.to_mesh(body.data);bm.free()
 # Satin graphite keeps shape legible without mirror-like eye highlights.
 dark.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value=.52
+# Neutral iris/pupil geometry clarifies gaze; no coat or painterly material pass.
+def neutral_material(name,color,rough):
+ m=bpy.data.materials.new(name);m.use_nodes=True;m.diffuse_color=(*color,1)
+ p=m.node_tree.nodes['Principled BSDF'];p.inputs['Base Color'].default_value=(*color,1);p.inputs['Roughness'].default_value=rough
+ return m
+iris_mat=neutral_material('Neutral taupe-grey iris',(.24,.23,.21),.65)
+pupil_mat=neutral_material('Graphite pupil',(.008,.010,.012),.32)
+for sign,C,U,V,N in eyes:
+ for name,rad,material,lift in [('Iris',.020,iris_mat,.0006),('Pupil',.009,pupil_mat,.0010)]:
+  vs=[];fs=[];K=48;R=5;uc=-sign*.007;vc=-.003
+  def point(u,v):
+   r2=(u/.050)**2+((v-sign*.10*u)/.031)**2
+   return C+U*u+V*v+N*(.022*(1-r2)+lift)
+  vs.append(point(uc,vc))
+  for k in range(1,R+1):
+   for j in range(K):
+    t=math.tau*j/K;vs.append(point(uc+rad*k/R*math.cos(t),vc+rad*k/R*math.sin(t)))
+  for j in range(K):fs.append((0,1+j,1+(j+1)%K))
+  for k in range(R-1):
+   for j in range(K):fs.append((1+k*K+j,1+(k+1)*K+j,1+(k+1)*K+(j+1)%K,1+k*K+(j+1)%K))
+  ob=mesh_obj(name+' '+str(sign),vs,fs,material);features.append(ob)
 body.name='FOX R01b connected head and chest sculpt'
 for p in body.data.polygons:p.use_smooth=True
 asset=[body]+features
@@ -203,13 +226,13 @@ views={'head-three-quarter':((2.3,-3.8,1.6),(0,-.35,.79),.92),
  'rear':((0,4,1.2),(0,.12,.55),2.6)}
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'fox-head-chest-study.blend'),compress=True)
 for name,(pos,target,scale) in views.items():
- cam.data.type='ORTHO';cam.location=pos;cam.rotation_euler=(Vector(target)-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=scale
+ cam.data.type='ORTHO';cam.location=Vector(target)+(Vector(pos)-Vector(target))*2.5;cam.rotation_euler=(Vector(target)-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=scale
  sc.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
 # Save with a useful head camera and the actual sculpt objects selected.
-pos,target,scale=views['head-three-quarter'];cam.location=pos;cam.rotation_euler=(Vector(target)-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=scale
+pos,target,scale=views['head-three-quarter'];cam.location=Vector(target)+(Vector(pos)-Vector(target))*2.5;cam.rotation_euler=(Vector(target)-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=scale
 bpy.ops.object.select_all(action='DESELECT');body.select_set(True);bpy.context.view_layer.objects.active=body
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'fox-head-chest-study.blend'),compress=True)
-metrics={'blender':bpy.app.version_string,'source_checkpoint':'972cd78f08d67e03aa473df76a16e3acf650dfc2','method':'Direct continuous-skin ruff sculpt fields, anatomical orbital annuli, beveled almond apertures, triangular conchal bowls, clean resurfacing on preserved .blend mesh','correction_round':2,'removed_tiny_components':removed,'export_zero_area_faces_removed':export_removed,'body_vertices':len(body.data.vertices),'body_polygons':len(body.data.polygons),'eye_surface_samples':eye_centers,'views':list(views),'art_verdict':'PENDING_VISUAL_REVIEW','premium_materials':False,'rigged':False}
+metrics={'blender':bpy.app.version_string,'source_checkpoint':'972cd78f08d67e03aa473df76a16e3acf650dfc2','method':'Direct continuous-skin ruff sculpt fields, anatomical orbital annuli, beveled almond apertures, triangular conchal bowls, clean resurfacing on preserved .blend mesh','correction_round':3,'removed_tiny_components':removed,'export_zero_area_faces_removed':export_removed,'body_vertices':len(body.data.vertices),'body_polygons':len(body.data.polygons),'eye_surface_samples':eye_centers,'neutral_iris_gaze_study':True,'views':list(views),'art_verdict':'PENDING_VISUAL_REVIEW','premium_materials':False,'rigged':False}
 (OUT/'metrics.json').write_text(json.dumps(metrics,indent=2))
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.gltf(filepath=str(OUT/'fox-head-chest-test.glb'))
 (OUT/'glb-roundtrip.json').write_text(json.dumps({'mesh_objects':sum(o.type=='MESH' for o in bpy.context.scene.objects),'armatures':sum(o.type=='ARMATURE' for o in bpy.context.scene.objects),'animations':len(bpy.data.actions)},indent=2))
