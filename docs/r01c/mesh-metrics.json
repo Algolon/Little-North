@@ -1,0 +1,14 @@
+{
+  "blender": "4.2.0",
+  "triangles": 253132,
+  "materials": 4,
+  "meshObjects": 4,
+  "seed": 19031,
+  "correctionRound": 2,
+  "perMeshTriangles": {
+    "Snow quilt 00": 18378,
+    "Connected trunk roots and bough skeleton": 28586,
+    "Layered sculpted needle fingers": 172680,
+    "Subtle sage needle accents": 33488
+  }
+}
