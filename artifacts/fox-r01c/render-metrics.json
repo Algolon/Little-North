@@ -1,4 +1,5 @@
 {
+  "source_commit": "0a36e08cfee1824ccd31c6a0af7d72c8a0e1e9a0",
   "blender": "4.2.0",
   "views": [
     "three-quarter",
@@ -13,6 +14,8 @@
   "facial_details": "Temporary eye/nose markers; no iris/pupil or finished eyelid design",
   "stage": "Neutral whole-character primary forms",
   "art_verdict": "PENDING_VISUAL_REVIEW",
+  "correction_round": 2,
+  "export_degenerate_faces_removed": 0,
   "rigged": false,
   "premium_materials": false
 }
