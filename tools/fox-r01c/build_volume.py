@@ -2,10 +2,12 @@
 Smooth signed-distance volumes, localized form carving, marching cubes.
 Run with system Python + numpy/scikit-image. Blender imports the resulting mesh.
 """
-import numpy as np,json
+import numpy as np,json,math,os,shutil
 from skimage.measure import marching_cubes
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'artifacts/fox-r01c';OUT.mkdir(parents=True,exist_ok=True)
+ROOT=Path(__file__).resolve().parents[2];OUT=ROOT/'artifacts/fox-r01c'
+# Only derived R01c outputs; previous checkpoints remain preserved in Git.
+shutil.rmtree(OUT,ignore_errors=True);OUT.mkdir(parents=True,exist_ok=True)
 STEP=.0045
 lo=np.array([-.39,-.79,-.02],dtype=np.float32);hi=np.array([.43,1.18,1.25],dtype=np.float32)
 axes=[np.arange(a,b+STEP,STEP,dtype=np.float32) for a,b in zip(lo,hi)]
@@ -80,5 +82,5 @@ D=-smin(-D,-(-Z),.003)
 verts,faces,normals,values=marching_cubes(D,level=0,spacing=(STEP,STEP,STEP),allow_degenerate=False)
 verts=(verts+lo).astype(np.float32)
 np.savez_compressed(OUT/'whole-fox-sculpt-mesh.npz',vertices=verts,faces=faces.astype(np.int32))
-meta={'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'primary whole-character anatomy and silhouette gate','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':2,'art_verdict':'PENDING_VISUAL_REVIEW'}
+meta={'source_commit':os.environ.get('GITHUB_SHA','local'),'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'primary whole-character anatomy and silhouette gate','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':2,'art_verdict':'PENDING_VISUAL_REVIEW'}
 (OUT/'construction.json').write_text(json.dumps(meta,indent=2));print(json.dumps({k:meta[k] for k in ['vertices','triangles','bounds_min','bounds_max']}))

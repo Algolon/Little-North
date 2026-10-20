@@ -1,5 +1,5 @@
 """Import and preserve the new continuous sculpt; actual neutral Blender renders."""
-import bpy,numpy as np,math,json,bmesh
+import bpy,numpy as np,math,json,bmesh,os
 from pathlib import Path
 from mathutils import Vector,Matrix
 from mathutils.bvhtree import BVHTree
@@ -65,6 +65,6 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),com
 for name in views:
  camera(name);sc.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
 camera('three-quarter');bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),compress=True)
-(OUT/'render-metrics.json').write_text(json.dumps({'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Temporary eye/nose markers; no iris/pupil or finished eyelid design','stage':'Neutral whole-character primary forms','art_verdict':'PENDING_VISUAL_REVIEW','correction_round':2,'export_degenerate_faces_removed':len(tiny),'rigged':False,'premium_materials':False},indent=2))
+(OUT/'render-metrics.json').write_text(json.dumps({'source_commit':os.environ.get('GITHUB_SHA','local'),'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Temporary eye/nose markers; no iris/pupil or finished eyelid design','stage':'Neutral whole-character primary forms','art_verdict':'PENDING_VISUAL_REVIEW','correction_round':2,'export_degenerate_faces_removed':len(tiny),'rigged':False,'premium_materials':False},indent=2))
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.gltf(filepath=str(OUT/'whole-fox-form-study.glb'))
 (OUT/'glb-roundtrip.json').write_text(json.dumps({'meshes':sum(o.type=='MESH' for o in bpy.context.scene.objects),'armatures':sum(o.type=='ARMATURE' for o in bpy.context.scene.objects),'animations':len(bpy.data.actions)},indent=2))
