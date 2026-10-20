@@ -57,7 +57,7 @@ def tube(points,radii,name):
  f.append(tuple(reversed(range(N))));f.append(tuple((len(points)-1)*N+j for j in range(N)))
  return mesh(name,v,f,woodmat)
 def stem(z):return Vector((.09*math.sin(z*.9)+.018*z,.07*math.sin(z*1.4),z))
-wood=[tube([stem(i*8.8/40) for i in range(41)],[.035+.28*(1-i/41)**1.2+.17*math.exp(-i*.8) for i in range(41)],'Trunk control surface')]
+wood=[tube([stem(i*8.8/40) for i in range(41)],[.035+.245*(1-i/41)**1.2+.15*math.exp(-i*.8) for i in range(41)],'Trunk control surface')]
 for a,l in [(0,1.0),(1.1,.75),(2.7,.95),(4,.7),(5.3,.88)]:
  d=Vector((math.cos(a),math.sin(a),0));wood.append(tube([stem(.9),d*.23+Vector((0,0,.36)),d*l*.65+Vector((0,0,.12)),d*l+Vector((0,0,.045))],[.22,.22,.12,.015],'Buttress'))
 # Explicit art-directed skeleton: height, bearing degrees, length, arch, breadth.
@@ -78,7 +78,7 @@ for bi,(z,deg,L,arch,breadth) in enumerate(layout):
  if bi%3==0:sites.insert(3,(.54,.04,.8))
  for j,(t,off,vol) in enumerate(sites):
   size=(.22+.14*L)*vol; c=path(t)+s*off*breadth+Vector((0,0,-.035))
-  yaw=a+(.3 if j%2 else -.28);sx=size*1.28;sy=size*(.72+.16*math.sin(bi+j));sz=size*.46
+  yaw=a+(.3 if j%2 else -.28);sx=size*1.43;sy=size*(.79+.16*math.sin(bi+j));sz=size*.35
   cushions.append(ellipsoid(c,(sx,sy,sz),'Foliage sculpt cage',pine,yaw))
   # Overlapping relief ridges cut the edge into compact stepped needle clusters.
   for k in range(3):
@@ -91,14 +91,20 @@ for bi,(z,deg,L,arch,breadth) in enumerate(layout):
    lip=cc+d*sx*.35+s*sy*(.58 if (bi+j)%2 else -.65)-Vector((0,0,sz*.23))
    snow.append(ellipsoid(lip,(sx*.47,sy*.47,sz*.72+.03),'Gravity lip',snowmat,yaw-.2))
   wood.append(tube([path(t*.8),c,c+d*sx*.75-Vector((0,0,.08))],[.026,.018,.004],'Secondary joint'))
-  for k in range(95):
-   theta=rng.random()*math.tau;rr=math.sqrt(rng.uniform(.3,1));xx=math.cos(theta)*sx*rr;yy=math.sin(theta)*sy*rr
-   zz=sz*math.sqrt(max(0,1-rr*rr))*(1 if k%4==0 else -.38)
+  for k in range(270):
+   theta=rng.random()*math.tau;rr=math.sqrt(rng.uniform(.45,1.12));xx=math.cos(theta)*sx*rr;yy=math.sin(theta)*sy*rr
+   zz=sz*math.sqrt(max(0,1-rr*rr))*(1 if k%5==0 else -1)
    pos=c+d*xx+s*yy+Vector((0,0,zz))
-   direction=(d*(.35+xx/sx*.4)+s*(yy/sy*.85)+Vector((0,0,-.25+rng.random()*.22)))
-   needle(pos,direction,rng.uniform(.07,.16)*(.6+L*.14),rng.uniform(.009,.017),1 if rng.random()<.24 else 0)
+   direction=(d*(.35+xx/sx*.4)+s*(yy/sy*.85)+Vector((0,0,-.38-rng.random()*.4)))
+   needle(pos,direction,rng.uniform(.11,.22)*(.65+L*.14),rng.uniform(.014,.022),1 if rng.random()<.24 else 0)
+ # Low-frequency union forms remain subordinate to the needle surface.
  o=fuse(cushions,f'Foliage {bi:02d} • compact layered sculpt',.042 if L>1.5 else .028,2)
+ for v in o.data.vertices:
+  p=o.matrix_world@v.co;v.co.z+=.036*math.sin(p.x*34+p.y*21)*math.sin(p.y*27-p.z*17)
  apply(o,'DECIMATE','Preserve sculpt silhouette',ratio=.65);allfol.append(o)
+ # Fill the saddles of the blanket with supported broad bridges, leaving the outer rim irregular.
+ for t in [.38,.53,.68,.81]:
+  c=path(t)+Vector((0,0,.14+.025*L));snow.append(ellipsoid(c,(L*.14+.10,breadth*.22,.13+.025*L),'Snow saddle bridge',snowmat,a))
  o=fuse(snow,f'Snow {bi:02d} • continuous supported mantle',.039 if L>1.5 else .025,5)
  apply(o,'SUBSURF','Rounded snow silhouette',levels=1,render_levels=1)
  apply(o,'DECIMATE','Snow surface economy',ratio=.46);allsnow.append(o)
@@ -108,7 +114,7 @@ woodobj=fuse(wood,'Wood • fused trunk roots and branch junctions',.035,3)
 for v in woodobj.data.vertices:
  p=woodobj.matrix_world@v.co;rr=math.hypot(p.x-stem(p.z).x,p.y-stem(p.z).y)
  if rr<.48 and p.z>.2:
-  a=math.atan2(p.y-stem(p.z).y,p.x-stem(p.z).x);depth=.009*math.sin(a*15+p.z*2)+.004*math.sin(a*27-p.z*5)
+  a=math.atan2(p.y-stem(p.z).y,p.x-stem(p.z).x);depth=.023*math.sin(a*15+p.z*2)+.011*math.sin(a*27-p.z*5)
   v.co.x+=math.cos(a)*depth;v.co.y+=math.sin(a)*depth
 apply(woodobj,'DECIMATE','Wood surface economy',ratio=.48)
 needles=mesh('Needle relief • short embedded tips',nv,nf,pine);needles.data.materials.append(sage)
@@ -126,7 +132,9 @@ for o in [woodobj]+allfol+[needles]:
    m.node_tree.links.new(n.outputs['Color'],mix.inputs[2]);m.node_tree.links.new(mix.outputs[0],m.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
 top=ellipsoid(stem(8.72),(.082,.09,.20),'Leader soft snow',snowmat)
 # Keep source components editable. A temporary export collection batches by material only.
-source=list(asset.objects);bpy.ops.object.select_all(action='DESELECT')
+source=list(asset.objects)
+for o in source:o.data.validate(verbose=True);o.data.update()
+bpy.ops.object.select_all(action='DESELECT')
 for o in source:o.select_set(True)
 bpy.context.view_layer.objects.active=source[0]
 bpy.ops.export_scene.gltf(filepath=str(R/'assets/r01e/hero-spruce.glb'),export_format='GLB',use_selection=True,export_materials='EXPORT')
@@ -142,6 +150,7 @@ sc.render.resolution_x=850;sc.render.resolution_y=1050;sc.render.resolution_perc
 def pose(loc,target,scale):
  cam.location=loc;cam.rotation_euler=(Vector(target)-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=scale
 pose((11,-17,9),(0,0,4.2),10.3)
+bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(R/'assets/r01e/hero-spruce.blend'),compress=True)
-for name,loc,target,scale in [('three-quarter',(11,-17,9),(0,0,4.2),10.3),('rear',(-12,16,8),(0,0,4.2),10.3),('side',(18,1,7),(0,0,4.2),10.3),('top',(1,-2,22),(0,0,4),8),('closeup',(8,-13,5),(1,-.7,2.6),4.2)]:
- pose(loc,target,scale);sc.render.filepath=str(OUT/f'blender-{name}.png');bpy.ops.render.render(write_still=True)
+# The final parity pass is reproducible and repairs Blender/glTF node compatibility.
+exec(compile((R/"tools/r01e/finalize_export.py").read_text(),str(R/"tools/r01e/finalize_export.py"),"exec"))
