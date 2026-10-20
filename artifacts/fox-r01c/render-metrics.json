@@ -1,0 +1,18 @@
+{
+  "blender": "4.2.0",
+  "views": [
+    "three-quarter",
+    "front",
+    "side",
+    "rear",
+    "head-three-quarter",
+    "head-front",
+    "distance"
+  ],
+  "method": "New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh",
+  "facial_details": "Temporary eye/nose markers; no iris/pupil or finished eyelid design",
+  "stage": "Neutral whole-character primary forms",
+  "art_verdict": "PENDING_VISUAL_REVIEW",
+  "rigged": false,
+  "premium_materials": false
+}
