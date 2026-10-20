@@ -1,34 +1,42 @@
 {
   "blender": "4.2.0",
   "source_checkpoint": "972cd78f08d67e03aa473df76a16e3acf650dfc2",
-  "method": "Local scripted sculpt fields, Boolean eye sockets/mouth/ear recesses, connected lids and rooted broad ruff lofts on existing .blend mesh",
-  "body_vertices": 226301,
-  "body_polygons": 224867,
+  "method": "Direct continuous-skin ruff sculpt fields, anatomical orbital annuli, beveled almond apertures, triangular conchal bowls, clean resurfacing on preserved .blend mesh",
+  "correction_round": 2,
+  "removed_tiny_components": [],
+  "export_zero_area_faces_removed": {
+    "FOX R01b reduced test mesh": 0,
+    "Almond eye -1": 0,
+    "Almond eye 1": 0,
+    "Rounded triangular nose": 0
+  },
+  "body_vertices": 424406,
+  "body_polygons": 424404,
   "eye_surface_samples": [
     {
       "side": -1,
       "surface": [
         -0.13699999451637268,
-        -0.5211767554283142,
+        -0.5213103294372559,
         0.8730000257492065
       ],
       "normal": [
-        -0.5853576064109802,
-        -0.7406983375549316,
-        0.32973089814186096
+        -0.576134204864502,
+        -0.7448185682296753,
+        0.3366224467754364
       ]
     },
     {
       "side": 1,
       "surface": [
         0.13699999451637268,
-        -0.5211811065673828,
+        -0.5214066505432129,
         0.8730000257492065
       ],
       "normal": [
-        0.5841947793960571,
-        -0.7409060001373291,
-        0.33132287859916687
+        0.5765177607536316,
+        -0.744504451751709,
+        0.3366606831550598
       ]
     }
   ],
