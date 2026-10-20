@@ -1,0 +1,34 @@
+[
+  {
+    "mesh": "Implicit whole-fox sculpt.001",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Embedded almond surface",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Embedded almond surface.001",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Sphere",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  }
+]

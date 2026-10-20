@@ -907,5 +907,6 @@
   },
   "correction_round": 4,
   "removed_tiny_component_vertices": [],
-  "art_verdict": "PENDING_VISUAL_REVIEW"
+  "art_verdict": "ART REJECT",
+  "review": "docs/fox-r01c/REVIEW.md"
 }

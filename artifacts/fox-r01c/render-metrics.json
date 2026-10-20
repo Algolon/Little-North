@@ -13,9 +13,10 @@
   "method": "New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh",
   "facial_details": "Embedded almond eye surfaces and shaped nose; iris/gaze and final eyelid design remain unapproved",
   "stage": "Neutral whole-character broad integrated coat sculpt",
-  "art_verdict": "PENDING_VISUAL_REVIEW",
+  "art_verdict": "ART REJECT",
   "correction_round": 4,
   "export_degenerate_faces_removed": 164,
   "rigged": false,
-  "premium_materials": false
+  "premium_materials": false,
+  "review": "docs/fox-r01c/REVIEW.md"
 }
