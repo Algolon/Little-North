@@ -1,0 +1,32 @@
+name: Fox R01b focused head and chest sculpt
+on:
+  push:
+    branches: [art/ln-fox-r01a-character-study]
+    paths: ['tools/fox-r01b/**', '.github/workflows/fox-r01b-study.yml']
+permissions:
+  contents: write
+jobs:
+  sculpt:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2
+        run: |
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.2/blender-4.2.0-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          tar -xf /tmp/blender.tar.xz -C /tmp
+      - name: Sculpt existing mesh and render neutral evidence
+        run: /tmp/blender-4.2.0-linux-x64/blender -b -t 2 --python tools/fox-r01b/sculpt_fox.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: LN-FOX-R01b-head-chest-study
+          path: artifacts/fox-r01b/
+          retention-days: 30
+      - name: Preserve source and evidence on isolated fox branch
+        run: |
+          git config user.name "Little North Art Pipeline"
+          git config user.email "107330279+Algolon@users.noreply.github.com"
+          git add artifacts/fox-r01b/
+          git commit -m "art(fox-r01b): preserve edited Blender mesh and neutral head-chest evidence" || test -z "$(git status --porcelain artifacts/fox-r01b/)"
+          git push origin HEAD:art/ln-fox-r01a-character-study
