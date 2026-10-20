@@ -1,0 +1,70 @@
+{
+  "views": [
+    {
+      "label": "three-quarter",
+      "ready": true,
+      "triangles": 766942,
+      "vertices": 460162,
+      "meshes": 4,
+      "materials": 4,
+      "geometryBytes": 28938830,
+      "drawCalls": 4,
+      "gpu": "WebKit WebGL",
+      "bounds": [
+        6.047412157058716,
+        8.973315328359604,
+        6.389746427536011
+      ]
+    },
+    {
+      "label": "rear",
+      "ready": true,
+      "triangles": 766942,
+      "vertices": 460162,
+      "meshes": 4,
+      "materials": 4,
+      "geometryBytes": 28938830,
+      "drawCalls": 4,
+      "gpu": "WebKit WebGL",
+      "bounds": [
+        6.047412157058716,
+        8.973315328359604,
+        6.389746427536011
+      ]
+    },
+    {
+      "label": "side",
+      "ready": true,
+      "triangles": 766942,
+      "vertices": 460162,
+      "meshes": 4,
+      "materials": 4,
+      "geometryBytes": 28938830,
+      "drawCalls": 4,
+      "gpu": "WebKit WebGL",
+      "bounds": [
+        6.047412157058716,
+        8.973315328359604,
+        6.389746427536011
+      ]
+    },
+    {
+      "label": "closeup",
+      "ready": true,
+      "triangles": 766942,
+      "vertices": 460162,
+      "meshes": 4,
+      "materials": 4,
+      "geometryBytes": 28938830,
+      "drawCalls": 4,
+      "gpu": "WebKit WebGL",
+      "bounds": [
+        6.047412157058716,
+        8.973315328359604,
+        6.389746427536011
+      ]
+    }
+  ],
+  "errors": [],
+  "renderer": "Chromium ANGLE SwiftShader desktop software rendering; no mobile claim"
+}

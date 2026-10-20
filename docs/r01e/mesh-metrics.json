@@ -1,0 +1,12 @@
+{
+  "blender": "5.2.2 LTS",
+  "triangles": 766942,
+  "vertices": 460141,
+  "meshObjects": 47,
+  "materials": 4,
+  "glbBytes": 28943760,
+  "method": "Blender native authored cage deformation / voxel sculpt fusion / embedded short needle relief; no manual brush strokes",
+  "exportMeshObjects": 1,
+  "exportMaterialPrimitives": 4,
+  "colorParity": "Baked full linear RGB vertex colors directly feed Principled Base Color; glTF COLOR_0"
+}
