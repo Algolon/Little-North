@@ -1,0 +1,30 @@
+{
+  "generator": "LN-R01d bough v3 / asymmetric branch study + compact overlapping foliage and snow geometry",
+  "seed": 24102026,
+  "triangles": 248008,
+  "vertices": 127484,
+  "meshes": 5,
+  "materials": 5,
+  "fileBytes": 5019800,
+  "geometryBytes": 9011808,
+  "bounds": [
+    [
+      -0.01738291322588633,
+      -1.670099773446137,
+      -0.9854754842474863
+    ],
+    [
+      3.5477837717569285,
+      1.3436695336839182,
+      0.11440080237752419
+    ]
+  ],
+  "meshTriangles": {
+    "cedar": 2290,
+    "pine": 118000,
+    "teal": 96736,
+    "sage": 14654,
+    "snow": 16328
+  },
+  "note": "Local export measured; WebGL counts and performance require real browser validation."
+}
