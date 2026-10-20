@@ -4,7 +4,7 @@ on:
     branches: [art/ln-fox-r01a-character-study]
     paths: ['tools/fox-r01a/**', '.github/workflows/fox-r01a-study.yml']
 permissions:
-  contents: read
+  contents: write
 jobs:
   render:
     runs-on: ubuntu-22.04
@@ -23,3 +23,10 @@ jobs:
           name: LN-FOX-R01a-character-study
           path: artifacts/fox-r01a/
           retention-days: 30
+      - name: Preserve generated study on isolated branch
+        run: |
+          git config user.name "Little North Art Pipeline"
+          git config user.email "107330279+Algolon@users.noreply.github.com"
+          git add artifacts/fox-r01a/
+          git commit -m "art(fox-r01a): preserve actual Blender source, GLB and neutral render evidence" || test -z "$(git status --porcelain artifacts/fox-r01a/)"
+          git push origin HEAD:art/ln-fox-r01a-character-study
