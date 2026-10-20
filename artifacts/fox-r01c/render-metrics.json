@@ -1,5 +1,5 @@
 {
-  "source_commit": "d0ff285997aa3980c90834071ebd3765586f41c3",
+  "source_commit": "e5e607de7b2535a7d1e480b57210aee7421c9960",
   "blender": "4.2.0",
   "views": [
     "three-quarter",
@@ -14,8 +14,8 @@
   "facial_details": "Embedded almond eye surfaces and shaped nose; iris/gaze and final eyelid design remain unapproved",
   "stage": "Neutral whole-character broad integrated coat sculpt",
   "art_verdict": "PENDING_VISUAL_REVIEW",
-  "correction_round": 3,
-  "export_degenerate_faces_removed": 170,
+  "correction_round": 4,
+  "export_degenerate_faces_removed": 164,
   "rigged": false,
   "premium_materials": false
 }

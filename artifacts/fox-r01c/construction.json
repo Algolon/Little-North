@@ -1,5 +1,5 @@
 {
-  "source_commit": "d0ff285997aa3980c90834071ebd3765586f41c3",
+  "source_commit": "e5e607de7b2535a7d1e480b57210aee7421c9960",
   "method": "Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse",
   "stage": "Whole-character broad integrated coat sculpt; neutral material review",
   "grid_step_m": 0.0045,
@@ -8,15 +8,15 @@
     439,
     284
   ],
-  "vertices": 188265,
-  "triangles": 376518,
+  "vertices": 187382,
+  "triangles": 374760,
   "bounds_min": [
-    -0.21505919098854065,
+    -0.21257904171943665,
     -0.6669521927833557,
     1.862645149230957e-09
   ],
   "bounds_max": [
-    0.31986039876937866,
+    0.3184637427330017,
     1.080901861190796,
     1.1219242811203003
   ],
@@ -844,7 +844,7 @@
         0.6369165778160095
       ],
       "mid": [
-        0.10125885158777237,
+        0.10125888139009476,
         0.7978897094726562,
         0.5123072862625122
       ],
@@ -865,12 +865,12 @@
         0.42959198355674744
       ],
       "mid": [
-        0.2865477204322815,
-        0.8424678444862366,
-        0.34213578701019287
+        0.28654760122299194,
+        0.8424679040908813,
+        0.34213581681251526
       ],
       "tip": [
-        0.1922912448644638,
+        0.1922912299633026,
         0.9680834412574768,
         0.2412894070148468
       ],
@@ -891,9 +891,9 @@
         0.32951149344444275
       ],
       "tip": [
-        -0.007999575696885586,
-        0.9521999359130859,
-        0.24431337416172028
+        -0.007999533787369728,
+        0.9521999955177307,
+        0.24431335926055908
       ],
       "width": 0.048,
       "amplitude": 0.016
@@ -905,6 +905,7 @@
     "muzzle_length_envelope": 0.162,
     "note": "Construction envelopes, not accepted final measurements"
   },
-  "correction_round": 3,
+  "correction_round": 4,
+  "removed_tiny_component_vertices": [],
   "art_verdict": "PENDING_VISUAL_REVIEW"
 }
