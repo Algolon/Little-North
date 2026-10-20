@@ -118,7 +118,7 @@ for name,pa,mid,pb,N,width,amp in guides:
   qx=X-a[0];qy=Y-a[1];qz=Z-a[2]
   t=(qx*T[0]+qy*T[1]+qz*T[2])/length
   whole=(seg+np.clip(t,0,1))*.5
-  taper=(1-.68*whole)*np.sin(np.pi*whole)**.65
+  taper=(1-.68*whole)*np.maximum(np.sin(np.pi*whole),0)**.65
   lateral=qx*U[0]+qy*U[1]+qz*U[2]
   outward=qx*N[0]+qy*N[1]+qz*N[2]
   stroke=amp*taper*np.exp(-(lateral/(width*(1-.45*whole)))**4-(outward/.048)**2)
@@ -128,6 +128,7 @@ for name,pa,mid,pb,N,width,amp in guides:
  operations.append({'kind':'Integrated sculpt relief','name':name,'root':pa.tolist(),'mid':mid.tolist(),'tip':pb.tolist(),'width':width,'amplitude':amp})
 # Flatten soles against the actual export ground plane, with a small softened edge.
 D=-smin(-D,-(-Z),.003)
+if not np.isfinite(D).all():raise RuntimeError('Nonfinite sculpt field')
 verts,faces,normals,values=marching_cubes(D,level=0,spacing=(STEP,STEP,STEP),allow_degenerate=False)
 verts=(verts+lo).astype(np.float32)
 np.savez_compressed(OUT/'whole-fox-sculpt-mesh.npz',vertices=verts,faces=faces.astype(np.int32))
