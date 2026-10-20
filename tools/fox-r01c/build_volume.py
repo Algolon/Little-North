@@ -45,9 +45,8 @@ rx=.027+.058*ease;rz=.026+.033*ease;cz=.812+.012*ease
 outside=np.maximum(-.640-Y,0)+np.maximum(Y+.505,0)
 d=(np.sqrt((X/rx)**2+((Z-cz)/rz)**2+(outside/.027)**2)-1)*np.minimum(rx,rz)
 add(d,.018,'Tapered muzzle wedge',{'nose_y':-.640,'root_y':-.505,'rx_tip':.027,'rx_root':.085})
-ell('Lower jaw',(0,-.520,.778),(.068,.093,.039),.018)
+ell('Lower jaw',(0,-.527,.781),(.063,.077,.032),.018)
 for s in [-1,1]:
- ell('Small muzzle pad',(s*.034,-.556,.803),(.034,.043,.028),.013)
  ell('Cheek plane',(s*.091,-.363,.850),(.067,.110,.071),.027)
  # Compact upright pinnae: smoothly blended rounded triangular volumes.
  ell('Ear base',(s*.110,-.369,1.015),(.068,.045,.068),.014)
@@ -76,11 +75,61 @@ add(d,.018,'Continuous curved full brush',{'root_y':.415,'tip_y':1.075,'max_radi
 for s in [-1,1]:
  # Carve a shallow orbital plane, not a large drilled eye hole.
  w=np.exp(-(((X-s*.097)/.047)**2+((Y+.503)/.040)**2+((Z-.913)/.035)**2)*1.7)
- D+=.006*w.astype(np.float32)
+ D+=.009*w.astype(np.float32)
+# Broad continuous groomed relief: sculpt the actual scalar skin, no loose tufts.
+from scipy.ndimage import map_coordinates
+def sample(p):
+ coords=((np.array(p,dtype=np.float32)-lo)/STEP).reshape(3,1)
+ return float(map_coordinates(D,coords,order=1,mode='nearest')[0])
+def project(p):
+ p=np.array(p,dtype=np.float32)
+ for _ in range(7):
+  value=sample(p);grad=np.array([(sample(p+np.eye(3,dtype=np.float32)[i]*STEP)-sample(p-np.eye(3,dtype=np.float32)[i]*STEP))/(2*STEP) for i in range(3)],dtype=np.float32)
+  norm=float(np.dot(grad,grad));p-=value*grad/max(norm,.02)
+ grad=grad/max(float(np.linalg.norm(grad)),1e-5)
+ return p,grad
+# Project all guides to the undeformed anatomical skin before applying any strokes.
+guides=[]
+for sign in [-1,1]:
+ for name,a,b,width,amp in [
+  ('Cheek sweep',(sign*.135,-.395,.883),(sign*.157,-.284,.805),.044,.018),
+  ('Side ruff',(sign*.142,-.282,.774),(sign*.184,-.219,.638),.050,.024),
+  ('Breast fan',(sign*.065,-.350,.721),(sign*.110,-.372,.519),.047,.026),
+  ('Outer breast',(sign*.130,-.283,.672),(sign*.183,-.248,.495),.045,.019),
+  ('Shoulder flow',(sign*.165,-.164,.718),(sign*.210,.016,.607),.052,.017),
+  ('Flank flow',(sign*.205,.025,.583),(sign*.183,.235,.484),.048,.014),
+  ('Hip sweep',(sign*.168,.252,.654),(sign*.185,.352,.491),.047,.016)]:
+  pa,na=project(a);pb,nb=project(b);mid,nm=project((pa+pb)*.5)
+  guides.append((name,pa,mid,pb,na+nb+nm,width,amp))
+for name,a,b,width,amp in [
+ ('Central bib',(0,-.373,.739),(0,-.387,.493),.055,.023),
+ ('Tail upper flow',(.105,.620,.624),(.105,.966,.378),.052,.021),
+ ('Tail outer flow',(.290,.680,.429),(.204,.982,.243),.047,.018),
+ ('Tail inner flow',(-.065,.650,.414),(-.036,.960,.247),.048,.016)]:
+ pa,na=project(a);pb,nb=project(b);mid,nm=project((pa+pb)*.5)
+ guides.append((name,pa,mid,pb,na+nb+nm,width,amp))
+for name,pa,mid,pb,N,width,amp in guides:
+ N=np.array(N,dtype=np.float32);N/=max(float(np.linalg.norm(N)),1e-5)
+ # Two curved-guide segments share a single broad taper profile.
+ field=np.zeros(shape,dtype=np.float32)
+ for seg,(a,b) in enumerate([(pa,mid),(mid,pb)]):
+  T=(b-a).astype(np.float32);length=float(np.linalg.norm(T));T/=max(length,1e-5)
+  U=np.cross(T,N);U/=max(float(np.linalg.norm(U)),1e-5)
+  qx=X-a[0];qy=Y-a[1];qz=Z-a[2]
+  t=(qx*T[0]+qy*T[1]+qz*T[2])/length
+  whole=(seg+np.clip(t,0,1))*.5
+  taper=(1-.68*whole)*np.sin(np.pi*whole)**.65
+  lateral=qx*U[0]+qy*U[1]+qz*U[2]
+  outward=qx*N[0]+qy*N[1]+qz*N[2]
+  stroke=amp*taper*np.exp(-(lateral/(width*(1-.45*whole)))**4-(outward/.048)**2)
+  stroke*=((t>=0)&(t<=1))
+  field=np.maximum(field,stroke.astype(np.float32))
+ D-=field
+ operations.append({'kind':'Integrated sculpt relief','name':name,'root':pa.tolist(),'mid':mid.tolist(),'tip':pb.tolist(),'width':width,'amplitude':amp})
 # Flatten soles against the actual export ground plane, with a small softened edge.
 D=-smin(-D,-(-Z),.003)
 verts,faces,normals,values=marching_cubes(D,level=0,spacing=(STEP,STEP,STEP),allow_degenerate=False)
 verts=(verts+lo).astype(np.float32)
 np.savez_compressed(OUT/'whole-fox-sculpt-mesh.npz',vertices=verts,faces=faces.astype(np.int32))
-meta={'source_commit':os.environ.get('GITHUB_SHA','local'),'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'primary whole-character anatomy and silhouette gate','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':2,'art_verdict':'PENDING_VISUAL_REVIEW'}
+meta={'source_commit':os.environ.get('GITHUB_SHA','local'),'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'Whole-character broad integrated coat sculpt; neutral material review','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':3,'art_verdict':'PENDING_VISUAL_REVIEW'}
 (OUT/'construction.json').write_text(json.dumps(meta,indent=2));print(json.dumps({k:meta[k] for k in ['vertices','triangles','bounds_min','bounds_max']}))

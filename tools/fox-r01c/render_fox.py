@@ -21,16 +21,29 @@ def oval(name,loc,scale,mat):
  bpy.ops.mesh.primitive_uv_sphere_add(segments=32,ring_count=20,location=loc);o=bpy.context.object;o.name=name;o.scale=scale;bpy.ops.object.transform_apply(location=False,rotation=False,scale=True);o.data.materials.append(mat)
  for p in o.data.polygons:p.use_smooth=True
  features.append(o);return o
-# Small temporary eye surfaces only; gaze and eyelid design remain unapproved.
+# Embedded almond eye surfaces without the rejected circular iris prototype.
 for s in [-1,1]:
  h,n,idx,d=bvh.ray_cast(Vector((s*.094,-1.5,.913)),Vector((0,1,0)),3)
  if h is None:raise RuntimeError('Eye surface sample missed')
- N=n.normalized();U=Vector((0,0,1)).cross(N).normalized();V=N.cross(U).normalized()
- ob=oval('Temporary inset eye '+str(s),h-N*.012,(.028,.019,.021),graphite)
- ob.rotation_euler=Matrix((U,V,N)).transposed().to_euler()
+ N=n.normalized();U=Vector((0,0,1)).cross(N).normalized();V=N.cross(U).normalized();C=h-N*.009
+ K=48;R=6;vs=[C+N*.019];fs=[]
+ for k in range(1,R+1):
+  rr=k/R
+  for j in range(K):
+   t=math.tau*j/K;u=.035*math.cos(t)*rr;vv=.020*math.copysign(abs(math.sin(t))**1.25,math.sin(t))*rr+s*.06*u
+   vs.append(C+U*u+V*vv+N*(.019*(1-rr*rr)))
+ for j in range(K):fs.append((0,1+j,1+(j+1)%K))
+ for k in range(R-1):
+  for j in range(K):fs.append((1+k*K+j,1+(k+1)*K+j,1+(k+1)*K+(j+1)%K,1+k*K+(j+1)%K))
+ back=len(vs);vs.append(C-N*.015)
+ for j in range(K):fs.append((back,1+(R-1)*K+(j+1)%K,1+(R-1)*K+j))
+ em=bpy.data.meshes.new('Embedded almond surface');em.from_pydata(vs,[],fs);em.update();eye=bpy.data.objects.new('Inset almond eye '+str(s),em);bpy.context.collection.objects.link(eye);em.materials.append(graphite)
+ for poly in em.polygons:poly.use_smooth=True
+ features.append(eye)
 h,n,idx,d=bvh.ray_cast(Vector((0,-1.5,.825)),Vector((0,1,0)),3)
 if h is None:raise RuntimeError('Nose sample missed')
-oval('Nose marker',h+Vector((0,-.007,0)),(.027,.018,.021),graphite)
+nose=oval('Nose marker',h+Vector((0,-.007,0)),(.027,.018,.020),graphite)
+for vert in nose.data.vertices:vert.co.x*=.55+.30*(vert.co.z/.020)
 root=bpy.data.objects.new('FOX ground-origin export root -Z forward',None);bpy.context.collection.objects.link(root)
 asset=[body]+features
 for o in asset:o.parent=root
@@ -38,7 +51,7 @@ root.rotation_euler.z=math.pi
 bpy.ops.object.select_all(action='DESELECT')
 exp=body.copy();exp.data=body.data.copy();exp.name='FOX R01c cleaned export sculpt';bpy.context.collection.objects.link(exp)
 bm=bmesh.new();bm.from_mesh(exp.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.000001)
-bmesh.ops.triangulate(bm,faces=list(bm.faces));tiny=[f for f in bm.faces if f.calc_area()<1e-13]
+bmesh.ops.triangulate(bm,faces=list(bm.faces));tiny=[f for f in bm.faces if f.calc_area()<1e-10]
 if tiny:bmesh.ops.delete(bm,geom=tiny,context='FACES_ONLY')
 bm.normal_update();bm.to_mesh(exp.data);bm.free()
 root.select_set(True);exp.select_set(True)
@@ -55,7 +68,7 @@ for pos,power,size,col in [((-3,-4,5),450,4,(1,.91,.82)),((3,-1,3),260,3,(.77,.8
  bpy.ops.object.light_add(type='AREA',location=pos);o=bpy.context.object;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,.6))-o.location).to_track_quat('-Z','Y').to_euler()
 bpy.ops.object.camera_add();cam=bpy.context.object;sc.camera=cam;cam.data.type='ORTHO'
 sc.unit_settings.system='METRIC';sc.unit_settings.scale_length=1
-sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=16;sc.cycles.use_denoising=True
+sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=20;sc.cycles.use_denoising=True
 sc.render.resolution_x=900;sc.render.resolution_y=900;sc.render.resolution_percentage=100;sc.view_settings.view_transform='AgX'
 views={'three-quarter':((3,-4,2),(0,.13,.57),2.26),'front':((0,-4,1.3),(0,.13,.57),2.26),'side':((4,0,1.3),(0,.13,.57),2.26),'rear':((0,4,1.3),(0,.13,.57),2.26),'head-three-quarter':((3,-4,1.9),(0,-.405,.88),.75),'head-front':((0,-4,1.5),(0,-.405,.88),.75),'distance':((3,4,2.8),(0,.13,.57),5.3)}
 def camera(name):
@@ -65,6 +78,6 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),com
 for name in views:
  camera(name);sc.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
 camera('three-quarter');bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),compress=True)
-(OUT/'render-metrics.json').write_text(json.dumps({'source_commit':os.environ.get('GITHUB_SHA','local'),'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Temporary eye/nose markers; no iris/pupil or finished eyelid design','stage':'Neutral whole-character primary forms','art_verdict':'PENDING_VISUAL_REVIEW','correction_round':2,'export_degenerate_faces_removed':len(tiny),'rigged':False,'premium_materials':False},indent=2))
+(OUT/'render-metrics.json').write_text(json.dumps({'source_commit':os.environ.get('GITHUB_SHA','local'),'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Embedded almond eye surfaces and shaped nose; iris/gaze and final eyelid design remain unapproved','stage':'Neutral whole-character broad integrated coat sculpt','art_verdict':'PENDING_VISUAL_REVIEW','correction_round':3,'export_degenerate_faces_removed':len(tiny),'rigged':False,'premium_materials':False},indent=2))
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.gltf(filepath=str(OUT/'whole-fox-form-study.glb'))
 (OUT/'glb-roundtrip.json').write_text(json.dumps({'meshes':sum(o.type=='MESH' for o in bpy.context.scene.objects),'armatures':sum(o.type=='ARMATURE' for o in bpy.context.scene.objects),'animations':len(bpy.data.actions)},indent=2))
