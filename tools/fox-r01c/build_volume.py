@@ -110,20 +110,16 @@ for name,a,b,width,amp in [
  guides.append((name,pa,mid,pb,na+nb+nm,width,amp))
 for name,pa,mid,pb,N,width,amp in guides:
  N=np.array(N,dtype=np.float32);N/=max(float(np.linalg.norm(N)),1e-5)
- # Two curved-guide segments share a single broad taper profile.
- field=np.zeros(shape,dtype=np.float32)
- for seg,(a,b) in enumerate([(pa,mid),(mid,pb)]):
-  T=(b-a).astype(np.float32);length=float(np.linalg.norm(T));T/=max(length,1e-5)
-  U=np.cross(T,N);U/=max(float(np.linalg.norm(U)),1e-5)
-  qx=X-a[0];qy=Y-a[1];qz=Z-a[2]
-  t=(qx*T[0]+qy*T[1]+qz*T[2])/length
-  whole=(seg+np.clip(t,0,1))*.5
-  taper=(1-.68*whole)*np.maximum(np.sin(np.pi*whole),0)**.65
-  lateral=qx*U[0]+qy*U[1]+qz*U[2]
-  outward=qx*N[0]+qy*N[1]+qz*N[2]
-  stroke=amp*taper*np.exp(-(lateral/(width*(1-.45*whole)))**4-(outward/.048)**2)
-  stroke*=((t>=0)&(t<=1))
-  field=np.maximum(field,stroke.astype(np.float32))
+ # A single smooth taper has no hard internal segment plane.
+ a=pa;b=pb;T=(b-a).astype(np.float32);length=float(np.linalg.norm(T));T/=max(length,1e-5)
+ U=np.cross(T,N);U/=max(float(np.linalg.norm(U)),1e-5)
+ qx=X-a[0];qy=Y-a[1];qz=Z-a[2]
+ t=(qx*T[0]+qy*T[1]+qz*T[2])/length;whole=np.clip(t,0,1)
+ # Exponent >1 makes the displacement AND its slope vanish at both ends.
+ taper=(1-.68*whole)*np.maximum(np.sin(np.pi*whole),0)**1.4
+ lateral=qx*U[0]+qy*U[1]+qz*U[2]
+ outward=qx*N[0]+qy*N[1]+qz*N[2]
+ field=(amp*taper*np.exp(-(lateral/(width*(1-.45*whole)))**4-(outward/.048)**2)*((t>=0)&(t<=1))).astype(np.float32)
  D-=field
  operations.append({'kind':'Integrated sculpt relief','name':name,'root':pa.tolist(),'mid':mid.tolist(),'tip':pb.tolist(),'width':width,'amplitude':amp})
 # Flatten soles against the actual export ground plane, with a small softened edge.
@@ -131,6 +127,14 @@ D=-smin(-D,-(-Z),.003)
 if not np.isfinite(D).all():raise RuntimeError('Nonfinite sculpt field')
 verts,faces,normals,values=marching_cubes(D,level=0,spacing=(STEP,STEP,STEP),allow_degenerate=False)
 verts=(verts+lo).astype(np.float32)
+# Inspect surface components; never silently keep a detached coat mass.
+from scipy.sparse import coo_matrix
+from scipy.sparse.csgraph import connected_components
+adj=coo_matrix((np.ones(faces.size,dtype=np.int8),(faces.ravel(),np.roll(faces,-1,axis=1).ravel())),shape=(len(verts),len(verts))).tocsr()
+count,labels=connected_components(adj,directed=False);sizes=np.bincount(labels);largest=int(np.argmax(sizes));removed_sizes=sorted(sizes[np.arange(len(sizes))!=largest].tolist(),reverse=True)
+if sum(removed_sizes)>len(verts)*.001:raise RuntimeError('Meaningful detached sculpt geometry: '+str(removed_sizes))
+if removed_sizes:
+ keep=labels==largest;faces=faces[np.all(keep[faces],axis=1)];remap=np.cumsum(keep)-1;faces=remap[faces];verts=verts[keep]
 np.savez_compressed(OUT/'whole-fox-sculpt-mesh.npz',vertices=verts,faces=faces.astype(np.int32))
-meta={'source_commit':os.environ.get('GITHUB_SHA','local'),'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'Whole-character broad integrated coat sculpt; neutral material review','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':3,'art_verdict':'PENDING_VISUAL_REVIEW'}
+meta={'source_commit':os.environ.get('GITHUB_SHA','local'),'method':'Smooth implicit whole-animal volume with local sculpt fields; new construction, no R01a/R01b mesh reuse','stage':'Whole-character broad integrated coat sculpt; neutral material review','grid_step_m':STEP,'grid_shape':shape,'vertices':len(verts),'triangles':len(faces),'bounds_min':verts.min(axis=0).tolist(),'bounds_max':verts.max(axis=0).tolist(),'forms':operations,'head_targets':{'cranium_width':.310,'cranium_height':.310,'muzzle_length_envelope':.162,'note':'Construction envelopes, not accepted final measurements'},'correction_round':4,'removed_tiny_component_vertices':removed_sizes,'art_verdict':'PENDING_VISUAL_REVIEW'}
 (OUT/'construction.json').write_text(json.dumps(meta,indent=2));print(json.dumps({k:meta[k] for k in ['vertices','triangles','bounds_min','bounds_max']}))
