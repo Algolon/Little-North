@@ -1,0 +1,20 @@
+{
+  "blender": "4.2.0",
+  "stage": "neutral anatomical form gate; no premium material pass",
+  "units": "meters",
+  "forward_blender": "-Y",
+  "forward_gltf": "-Z",
+  "height_m": 1.1636337041854858,
+  "body_vertices": 76572,
+  "body_polygons": 76570,
+  "rigged": false,
+  "views": [
+    "front",
+    "side",
+    "rear",
+    "three-quarter",
+    "gameplay"
+  ],
+  "art_verdict": "PENDING_VISUAL_REVIEW",
+  "round": 2
+}
