@@ -54,7 +54,9 @@
     "side",
     "rear"
   ],
-  "art_verdict": "PENDING_VISUAL_REVIEW",
+  "art_verdict": "ART REJECT",
   "premium_materials": false,
-  "rigged": false
+  "rigged": false,
+  "review": "docs/fox-r01b/REVIEW.md",
+  "gaze_study_verdict": "REJECT: graphic button-like irises and fixed expression"
 }

@@ -1,0 +1,66 @@
+[
+  {
+    "mesh": "Almond eye -1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Almond eye 1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Continuous neck and trunk.001",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Iris -1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Iris 1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Pupil -1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Pupil 1",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  },
+  {
+    "mesh": "Rounded triangular nose",
+    "position_components_per_primitive": [
+      1
+    ],
+    "degenerate_triangles": 0,
+    "nonfinite_positions": 0
+  }
+]
