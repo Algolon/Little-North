@@ -5,7 +5,7 @@
   "vertices": 127484,
   "meshes": 5,
   "materials": 5,
-  "fileBytes": 5019800,
+  "fileBytes": 5019768,
   "geometryBytes": 9011808,
   "bounds": [
     [
@@ -26,5 +26,5 @@
     "sage": 14654,
     "snow": 16328
   },
-  "note": "Local export measured; WebGL counts and performance require real browser validation."
+  "note": "Python topology counts; WebGL draw calls require real Three.js capture. Includes unmerged intersections inside material batches."
 }
