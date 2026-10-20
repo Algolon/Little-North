@@ -1,0 +1,25 @@
+name: Fox R01a Blender character study
+on:
+  push:
+    branches: [art/ln-fox-r01a-character-study]
+    paths: ['tools/fox-r01a/**', '.github/workflows/fox-r01a-study.yml']
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2
+        run: |
+          curl --fail --location --retry 2 https://download.blender.org/release/Blender4.2/blender-4.2.0-linux-x64.tar.xz -o /tmp/blender.tar.xz
+          tar -xf /tmp/blender.tar.xz -C /tmp
+      - name: Build, render and roundtrip GLB
+        run: /tmp/blender-4.2.0-linux-x64/blender -b -t 2 --python tools/fox-r01a/build_fox.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: LN-FOX-R01a-character-study
+          path: artifacts/fox-r01a/
+          retention-days: 30
