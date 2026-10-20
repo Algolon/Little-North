@@ -19,3 +19,13 @@ Technical observations: 83,518 base body vertices; GLB imported into a fresh Ble
 Continuous authored lofts replace the trunk, muzzle, cheek and limb constructions; reduced ears; smaller and more embedded eyes; lowered croup; flat paw contact; full tail framing. A ground-origin export root rotates the GLB into the game's -Z convention while keeping the editable Blender source in -Y modeling orientation.
 
 No premium fur/material pass is authorized by the round 1 form result. Review the corrected neutral evidence first. No rigging, animation or gameplay integration.
+
+## Round 2: ART REJECT
+
+Actual five-view render set from run 39408342591 was downloaded and inspected. Improved: full tail framing, smaller ears, cleaner forelegs, less pendulous cheeks. Remaining: overly straight trunk, long-legged silhouette, abrupt haunch transition, oval smooth tail and insufficient facial structure. Premium fur/material pass remains withheld.
+
+The generated .blend, GLB and five-view evidence are committed at d1fc12762c3dc389cbf4a4f6f5c2a0c5899582a0. Independent container inspection verified GLB 2.0 header/length, four meshes, two materials, no skins/actions and the explicit -Z-facing root. Round 2 test export has 616,208 triangles; it is a high-resolution study, not a production mobile character.
+
+## Round 3 correction scope
+
+Compact lower limbs, subtly broader/shorter head, curved ribcage-to-loin transition, smoother haunch root, tapered descending tail brush. Test GLB receives a temporary reduction modifier while the .blend retains the editable high-resolution sculpt surface. Neutral sheet is composed entirely from actual Blender PNGs.

@@ -41,7 +41,7 @@ def loft(name,sections,axis='Y'):
 # A single authored trunk silhouette: neck, breast, ribcage, loin, croup.
 loft('Continuous neck and trunk',[
  (0,-.47,.84,.11,.12),(0,-.38,.77,.18,.20),(0,-.25,.66,.225,.245),
- (0,-.08,.62,.216,.225),(0,.14,.61,.205,.205),(0,.31,.61,.196,.203),
+ (0,-.08,.625,.219,.225),(0,.14,.635,.184,.175),(0,.31,.62,.196,.195),
  (0,.45,.60,.186,.205),(0,.55,.59,.11,.12),(0,.58,.59,.015,.025)])
 # Tapered muzzle and cranial wedge, with no pendulous cheek spheres.
 loft('Cranium and muzzle wedge',[
@@ -60,7 +60,7 @@ for sign in [-1,1]:
   (sign*.15,-.26,.33,.050,.048),(sign*.15,-.26,.17,.039,.041),
   (sign*.15,-.28,.065,.047,.052)],'Z')
  # Haunch follows the croup instead of cresting above the back.
- loft('Hind limb',[(sign*.14,.40,.62,.090,.104),(sign*.16,.36,.44,.093,.098),
+ loft('Hind limb',[(sign*.10,.41,.75,.032,.040),(sign*.125,.40,.59,.074,.090),(sign*.15,.36,.44,.092,.100),
   (sign*.16,.29,.31,.060,.061),(sign*.16,.43,.185,.039,.039),
   (sign*.16,.415,.067,.035,.040)],'Z')
  oval('Front paw',(sign*.15,-.31,.048),(.062,.086,.048))
@@ -77,8 +77,8 @@ for sign in [-1,1]:
  me=bpy.data.meshes.new('Pinna loft');me.from_pydata(v,[],f);me.update();ob=bpy.data.objects.new('Rounded short ear',me);bpy.context.collection.objects.link(ob);parts.append(ob)
 # Big descending brush, gentle lateral curl; all tail sections fused into core.
 for i in range(17):
- t=i/16;y=.52+t*.63;z=.60-.31*t; x=.19*math.sin(t*2.1)
- r=.065+.17*math.sin(math.pi*t)**.72
+ t=i/16;y=.52+t*.63;z=.60-.36*t; x=.19*math.sin(t*2.1)
+ r=.004+.205*math.sin(math.pi*t)**.80
  oval('Tail brush', (x,y,z),(r*.88,r*1.1,r))
 # Merge and voxel-union: eliminate primitive intersections before assessment.
 bpy.ops.object.select_all(action='DESELECT')
@@ -88,6 +88,16 @@ bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bp
 r=body.modifiers.new('Fused sculpt volumes','REMESH');r.mode='VOXEL';r.voxel_size=.008;r.use_smooth_shade=True;bpy.ops.object.modifier_apply(modifier=r.name)
 s=body.modifiers.new('Organic junction relaxation','SMOOTH');s.factor=1.1;s.iterations=12;bpy.ops.object.modifier_apply(modifier=s.name)
 for p in body.data.polygons:p.use_smooth=True
+# Sculpt-space proportion correction: compact lower limbs, gently enlarged head.
+def proportion(p):
+ p=Vector(p);w=max(0,min(1,(p.z-.70)/.16))*max(0,min(1,(-p.y-.20)/.15))
+ p.x*=1+.12*w
+ p.y= p.y+(-.36-p.y)*.08*w
+ p.z+= (p.z-.93)*.05*w
+ p.z-=.095*max(0,min(1,(p.z-.08)/.40))
+ return p
+for vert in body.data.vertices:
+ wp=body.matrix_world@vert.co;vert.co=body.matrix_world.inverted()@proportion(wp)
 # Flatten paw soles gently for supported stance.
 for vert in body.data.vertices:
  worldz=(body.matrix_world@vert.co).z
@@ -98,6 +108,9 @@ for sign in [-1,1]:
  o=oval('Eye', (sign*.124,-.548,.953),(.030,.015,.022),features,dark)
  # Dark inset pinna is intentionally absent in clay pass: inspect ear form first.
 oval('Nose',(0,-.721,.874),(.033,.020,.023),features,dark)
+for ob in features:
+ ob.location=proportion(ob.location)
+ ob.scale.x=1.10
 asset=[body]+features
 # Zero ground contact, fixed origin, meters, no hidden proxy.
 for o in asset:
@@ -113,7 +126,9 @@ root.rotation_euler.z=math.pi
 root.select_set(True)
 for o in asset:o.select_set(True)
 bpy.context.view_layer.objects.active=body
+export_dec=body.modifiers.new('Study export reduction only','DECIMATE');export_dec.ratio=.25
 bpy.ops.export_scene.gltf(filepath=str(OUT/'fox-clay-test.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=True)
+body.modifiers.remove(export_dec)
 root.rotation_euler.z=0
 # Studio outside export selection.
 ground=mat('Studio ground',(.13,.16,.19))
@@ -124,7 +139,7 @@ sc.world.node_tree.nodes['Background'].inputs[1].default_value=.4
 for pos,power,size,col in [((-3,-4,5),450,4,(1,.89,.78)),((3,-1,3),300,3,(.72,.84,1)),((1,4,4),500,3,(1,.93,.85))]:
  bpy.ops.object.light_add(type='AREA',location=pos);o=bpy.context.object;o.data.energy=power;o.data.shape='DISK';o.data.size=size;o.data.color=col;o.rotation_euler=(Vector((0,0,.6))-o.location).to_track_quat('-Z','Y').to_euler()
 bpy.ops.object.camera_add();cam=bpy.context.object;sc.camera=cam;cam.data.type='ORTHO';cam.data.ortho_scale=2.65
-sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=20;sc.cycles.use_denoising=True
+sc.render.engine='CYCLES';sc.cycles.device='CPU';sc.cycles.samples=16;sc.cycles.use_denoising=True
 sc.render.resolution_x=1000;sc.render.resolution_y=900;sc.render.resolution_percentage=100
 sc.view_settings.view_transform='AgX'
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'fox-character-study.blend'),compress=True)
@@ -132,7 +147,7 @@ views={'front':(0,-4,1.3),'side':(4,0,1.3),'rear':(0,4,1.3),'three-quarter':(3,-
 for name,pos in views.items():
  cam.location=pos;target=Vector((0,.12,.59));cam.rotation_euler=(target-cam.location).to_track_quat('-Z','Y').to_euler();cam.data.ortho_scale=5.5 if name=='gameplay' else 2.65
  sc.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
-metrics={'blender':bpy.app.version_string,'stage':'neutral anatomical form gate; no premium material pass','units':'meters','forward_blender':'-Y','forward_gltf':'-Z','height_m':max((body.matrix_world@Vector(v)).z for v in body.bound_box),'body_vertices':len(body.data.vertices),'body_polygons':len(body.data.polygons),'rigged':False,'views':list(views),'art_verdict':'PENDING_VISUAL_REVIEW','round':2}
+metrics={'blender':bpy.app.version_string,'stage':'neutral anatomical form gate; no premium material pass','units':'meters','forward_blender':'-Y','forward_gltf':'-Z','height_m':max((body.matrix_world@Vector(v)).z for v in body.bound_box),'body_vertices':len(body.data.vertices),'body_polygons':len(body.data.polygons),'rigged':False,'views':list(views),'art_verdict':'PENDING_VISUAL_REVIEW','round':3}
 (OUT/'metrics.json').write_text(json.dumps(metrics,indent=2))
 # Reimport test GLB separately to prove parser, dimensions and absence of armatures.
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.gltf(filepath=str(OUT/'fox-clay-test.glb'))

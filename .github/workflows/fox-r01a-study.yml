@@ -17,6 +17,10 @@ jobs:
           tar -xf /tmp/blender.tar.xz -C /tmp
       - name: Build, render and roundtrip GLB
         run: /tmp/blender-4.2.0-linux-x64/blender -b -t 2 --python tools/fox-r01a/build_fox.py
+      - name: Compose neutral review sheet
+        run: |
+          python3 -m pip -q install Pillow
+          python3 tools/fox-r01a/contact_sheet.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
