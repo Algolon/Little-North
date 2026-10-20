@@ -33,3 +33,7 @@ Scripted Blender volume construction, voxel union, surface relaxation, editable 
 ## Evidence
 
 The scoped workflow executes official Blender 4.2 on a GitHub runner because Blender is unavailable in the local session and local download access is blocked. It exports a selected-only GLB and imports it again into a fresh Blender scene. Neutral grey clay uses the same studio for all views. Gameplay-distance view is an isolated studio framing, not an in-game screenshot; no gameplay integration is performed.
+
+## Final round 3 measured outcome
+
+Study height approximately 1.080 m. Lower-limb shortening and head deformation supersede the original construction targets above. The model did not pass silhouette/anatomy acceptance; these proportions are not locked for production. The five-view neutral sheet is in `artifacts/fox-r01a/neutral-review-sheet.png`.

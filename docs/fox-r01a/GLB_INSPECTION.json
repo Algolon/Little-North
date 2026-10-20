@@ -1,0 +1,13 @@
+{
+  "container": "GLB 2.0",
+  "bytes": 3583060,
+  "meshes": 4,
+  "materials": 2,
+  "exported_vertices": 74795,
+  "exported_triangles": 149088,
+  "forward": "-Z after root rotation",
+  "up": "+Y",
+  "rigged": false,
+  "animated": false,
+  "limitations": "No runtime integration or full Khronos validator claimed"
+}

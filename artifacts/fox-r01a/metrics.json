@@ -15,6 +15,8 @@
     "three-quarter",
     "gameplay"
   ],
-  "art_verdict": "PENDING_VISUAL_REVIEW",
-  "round": 3
+  "art_verdict": "ART REJECT",
+  "round": 3,
+  "review": "docs/fox-r01a/REVIEW.md",
+  "review_basis": "five actual Blender Cycles neutral renders, round 3"
 }
