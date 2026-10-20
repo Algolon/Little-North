@@ -1,0 +1,33 @@
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const canvas=document.getElementById('scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#8495aa');
+scene.add(new THREE.HemisphereLight(0xe8f2fc,0x526371,2));
+const sun=new THREE.DirectionalLight(0xffe7c6,3);sun.position.set(-3,7,6);scene.add(sun);
+const rim=new THREE.DirectionalLight(0xd2e6ff,1.4);rim.position.set(5,4,-5);scene.add(rim);
+const object=(await new GLTFLoader().loadAsync(new URL('./hero-spruce.glb',import.meta.url).href)).scene;
+scene.add(object);
+const bounds=new THREE.Box3().setFromObject(object);const center=bounds.getCenter(new THREE.Vector3());
+const size=bounds.getSize(new THREE.Vector3()), radius=Math.max(size.x,size.y,size.z);
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.05,100);
+const views={'1':[-1.0,.24],'2':[2.15,.2],'3':[0,.15],'4':[-1,.12]};
+let angle=.65,elev=.45,dist=radius*1.8,dirty=true;
+function select(k){if(!views[k])return;[angle,elev]=views[k];dist=radius*(k==='4'?.85:1.8);dirty=true;}
+window.addEventListener('keydown',e=>select(e.key));
+let down=false,x=0,y=0;
+canvas.addEventListener('pointerdown',e=>{down=true;x=e.clientX;y=e.clientY;canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointerup',()=>down=false);
+canvas.addEventListener('pointermove',e=>{if(!down)return;angle+=(e.clientX-x)*.008;elev=THREE.MathUtils.clamp(elev-(e.clientY-y)*.008,-1.4,1.55);x=e.clientX;y=e.clientY;dirty=true});
+canvas.addEventListener('wheel',e=>{e.preventDefault();dist=THREE.MathUtils.clamp(dist+e.deltaY*.008,radius*.9,radius*6);dirty=true},{passive:false});
+function draw(){requestAnimationFrame(draw);if(!dirty&&!new URLSearchParams(location.search).has('animate'))return;dirty=false;
+ camera.position.set(center.x+dist*Math.cos(elev)*Math.cos(angle),center.y+dist*Math.sin(elev),center.z+dist*Math.cos(elev)*Math.sin(angle));camera.lookAt(center.clone().add(new THREE.Vector3(0,dist<radius? -1.2:0,0)));renderer.render(scene,camera);
+ const stats={ready:true,triangles:0,vertices:0,meshes:0,materials:0,geometryBytes:0};const mats=new Set();
+ object.traverse(o=>{if(!o.isMesh)return;const g=o.geometry;stats.meshes++;stats.vertices+=g.attributes.position.count;stats.triangles+=(g.index?.count||g.attributes.position.count)/3;stats.geometryBytes+=Object.values(g.attributes).reduce((s,a)=>s+a.array.byteLength,0)+(g.index?.array.byteLength||0);(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>mats.add(m));});
+ stats.materials=mats.size;stats.drawCalls=renderer.info.render.calls;stats.gpu=renderer.getContext().getParameter(renderer.getContext().RENDERER);stats.bounds=size.toArray();window.__LN_HERO__=stats;
+}
+window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();dirty=true});
+select(new URLSearchParams(location.search).get('view')||'1');draw();
