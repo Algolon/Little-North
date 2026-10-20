@@ -1,0 +1,79 @@
+name: LN-R01d rejected bough study — evidence checkpoint
+on:
+  push:
+    branches:
+      - art/ln-r01d-branch-study
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bough-evidence:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate mesh and preserve GLB before render
+        run: |
+          python -m pip install --disable-pip-version-check numpy trimesh pillow
+          python tools/r01d/build_bough.py
+          python - <<'PY'
+          from pathlib import Path
+          assert Path('public/models/ln-r01d-hero-bough.glb').stat().st_size > 100000
+          print('GLB mesh checkpoint validated')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/models/ln-r01d-hero-bough.glb docs/r01d/mesh-metrics.json
+          git commit -m 'art(r01d): preserve rejected GLB candidate' || true
+          git push origin HEAD:art/ln-r01d-branch-study
+      - name: Acquire Blender 4.2 for actual CPU renders
+        run: |
+          curl -fL --retry 3 --retry-delay 5 --max-time 900 \
+            https://download.blender.org/release/Blender4.2/blender-4.2.0-linux-x64.tar.xz \
+            -o /tmp/blender-4.2.tar.xz
+          tar -xf /tmp/blender-4.2.tar.xz -C /tmp
+          /tmp/blender-4.2.0-linux-x64/blender -b --factory-startup --version
+      - name: Save editable imported mesh and Cycles reference views
+        run: |
+          /tmp/blender-4.2.0-linux-x64/blender -b -t 4 --python tools/r01d/render_blender.py
+          python tools/r01d/contact_sheet.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install runtime and browser
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Start isolated Three.js preview (not production)
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4174 > /tmp/ln-r01d-vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:4174/bough.html >/dev/null && exit 0
+            sleep 2
+          done
+          cat /tmp/ln-r01d-vite.log
+          exit 1
+      - name: Capture real browser renders and metrics
+        run: |
+          node scripts/r01d-visual-qa.mjs
+          python tools/r01d/contact_sheet.py
+      - name: Commit evidence to study branch, never merge or deploy
+        if: always()
+        run: |
+          git add assets/r01d docs/r01d/evidence docs/r01d/mesh-metrics.json docs/r01d/webgl-metrics.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m 'docs(r01d): preserve actual Blender and WebGL visual evidence'
+            git push origin HEAD:art/ln-r01d-branch-study
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ln-r01d-art-reject-evidence
+          path: |
+            assets/r01d/
+            public/models/ln-r01d-hero-bough.glb
+            docs/r01d/
+          retention-days: 14

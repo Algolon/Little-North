@@ -1,0 +1,46 @@
+{
+  "views": [
+    {
+      "label": "three-quarter",
+      "ready": true,
+      "triangles": 248008,
+      "vertices": 127484,
+      "meshes": 5,
+      "materials": 1,
+      "geometryBytes": 5015840,
+      "drawCalls": 5
+    },
+    {
+      "label": "top",
+      "ready": true,
+      "triangles": 248008,
+      "vertices": 127484,
+      "meshes": 5,
+      "materials": 1,
+      "geometryBytes": 5015840,
+      "drawCalls": 5
+    },
+    {
+      "label": "side",
+      "ready": true,
+      "triangles": 248008,
+      "vertices": 127484,
+      "meshes": 5,
+      "materials": 1,
+      "geometryBytes": 5015840,
+      "drawCalls": 5
+    },
+    {
+      "label": "closeup",
+      "ready": true,
+      "triangles": 248008,
+      "vertices": 127484,
+      "meshes": 5,
+      "materials": 1,
+      "geometryBytes": 5015840,
+      "drawCalls": 5
+    }
+  ],
+  "errors": [],
+  "renderer": "Headless Chromium / ANGLE SwiftShader (not a mobile GPU)"
+}
