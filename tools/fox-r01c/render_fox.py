@@ -26,7 +26,7 @@ for s in [-1,1]:
  h,n,idx,d=bvh.ray_cast(Vector((s*.094,-1.5,.913)),Vector((0,1,0)),3)
  if h is None:raise RuntimeError('Eye surface sample missed')
  N=n.normalized();U=Vector((0,0,1)).cross(N).normalized();V=N.cross(U).normalized()
- ob=oval('Temporary inset eye '+str(s),h-N*.009,(.025,.018,.013),graphite)
+ ob=oval('Temporary inset eye '+str(s),h-N*.012,(.028,.019,.021),graphite)
  ob.rotation_euler=Matrix((U,V,N)).transposed().to_euler()
 h,n,idx,d=bvh.ray_cast(Vector((0,-1.5,.825)),Vector((0,1,0)),3)
 if h is None:raise RuntimeError('Nose sample missed')
@@ -35,10 +35,17 @@ root=bpy.data.objects.new('FOX ground-origin export root -Z forward',None);bpy.c
 asset=[body]+features
 for o in asset:o.parent=root
 root.rotation_euler.z=math.pi
-bpy.ops.object.select_all(action='DESELECT');root.select_set(True)
-for o in asset:o.select_set(True)
-bpy.context.view_layer.objects.active=body
+bpy.ops.object.select_all(action='DESELECT')
+exp=body.copy();exp.data=body.data.copy();exp.name='FOX R01c cleaned export sculpt';bpy.context.collection.objects.link(exp)
+bm=bmesh.new();bm.from_mesh(exp.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.000001)
+bmesh.ops.triangulate(bm,faces=list(bm.faces));tiny=[f for f in bm.faces if f.calc_area()<1e-13]
+if tiny:bmesh.ops.delete(bm,geom=tiny,context='FACES_ONLY')
+bm.normal_update();bm.to_mesh(exp.data);bm.free()
+root.select_set(True);exp.select_set(True)
+for ob in features:ob.select_set(True)
+bpy.context.view_layer.objects.active=exp
 bpy.ops.export_scene.gltf(filepath=str(OUT/'whole-fox-form-study.glb'),export_format='GLB',use_selection=True,export_yup=True,export_apply=True)
+bpy.data.objects.remove(exp,do_unlink=True)
 root.rotation_euler.z=0
 # Neutral studio; cameras are far enough that orthographic rays start above floor.
 bpy.ops.mesh.primitive_plane_add(size=200);floor=bpy.context.object;floor.name='Studio floor, excluded from export';floor.location.z=-.001;floor.data.materials.append(material('Studio grey',(.14,.17,.20)))
@@ -58,6 +65,6 @@ bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),com
 for name in views:
  camera(name);sc.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
 camera('three-quarter');bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'whole-fox-sculpt-study.blend'),compress=True)
-(OUT/'render-metrics.json').write_text(json.dumps({'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Temporary eye/nose markers; no iris/pupil or finished eyelid design','stage':'Neutral whole-character primary forms','art_verdict':'PENDING_VISUAL_REVIEW','rigged':False,'premium_materials':False},indent=2))
+(OUT/'render-metrics.json').write_text(json.dumps({'blender':bpy.app.version_string,'views':list(views),'method':'New smooth implicit whole-animal sculpt volume, imported as actual editable Blender mesh','facial_details':'Temporary eye/nose markers; no iris/pupil or finished eyelid design','stage':'Neutral whole-character primary forms','art_verdict':'PENDING_VISUAL_REVIEW','correction_round':2,'export_degenerate_faces_removed':len(tiny),'rigged':False,'premium_materials':False},indent=2))
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.gltf(filepath=str(OUT/'whole-fox-form-study.glb'))
 (OUT/'glb-roundtrip.json').write_text(json.dumps({'meshes':sum(o.type=='MESH' for o in bpy.context.scene.objects),'armatures':sum(o.type=='ARMATURE' for o in bpy.context.scene.objects),'animations':len(bpy.data.actions)},indent=2))
